@@ -227,10 +227,13 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media print {
-  @page { size: A4 portrait; margin: 14mm 12mm; }
-  body { background: #fff; font-size: 10.5pt; line-height: 1.45; }
+  /* A4 纵向：210mm × 297mm，四周 12mm 边距 → 可打印区 186mm × 273mm */
+  @page { size: 210mm 297mm; margin: 12mm; }
+  html, body { width: 186mm; background: #fff; }
+  body { font-size: 10.5pt; line-height: 1.45; }
+  .app { display: block; width: 186mm; }
   .sidebar, .toolbar, .topbar { display: none !important; }
-  .main { padding: 0; }
+  .main { padding: 0; width: 186mm; }
   .masonry {
     column-count: 1 !important;
     padding: 0 !important;
@@ -261,8 +264,6 @@ a { color: inherit; text-decoration: none; }
   .card-body th, .card-body td { padding: 3px 6px; }
   .card-tag { font-size: 9.5pt; padding: 1px 7px; margin-bottom: 5px; }
   a { color: inherit !important; text-decoration: none !important; }
-  .card { page-break-after: always; }
-  .masonry > .card:last-child { page-break-after: auto; }
   .card-body { orphans: 3; widows: 3; }
 }
 

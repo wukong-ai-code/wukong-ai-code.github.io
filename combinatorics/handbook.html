@@ -180,10 +180,13 @@ mjx-container[display="true"]::-webkit-scrollbar-thumb { background: var(--borde
 }
 
 @media print {
-  @page { size: A4 portrait; margin: 13mm 11mm; }
-  body { background: #fff; font-size: 10.3pt; line-height: 1.42; }
+  /* A4 纵向：210mm × 297mm，四周 12mm 边距 → 可打印区 186mm × 273mm */
+  @page { size: 210mm 297mm; margin: 12mm; }
+  html, body { width: 186mm; background: #fff; }
+  body { font-size: 10.3pt; line-height: 1.42; }
+  .app { display: block; width: 186mm; }
   .sidebar, .topbar, .controls { display: none !important; }
-  .main { padding: 0; }
+  .main { padding: 0; width: 186mm; }
   .sec-label { padding: 4mm 0 1mm; font-size: 14pt; page-break-after: avoid; }
   .masonry { column-count: 1 !important; padding: 0 !important; display: block; }
   .card {
