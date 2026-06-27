@@ -53,6 +53,16 @@ a { color: var(--accent); text-decoration: none; }
 .topbar .controls a:hover, .topbar .controls button:hover {
   background: rgba(255,255,255,0.28);
 }
+.topbar .controls .seg {
+  display: inline-flex; gap: 0; padding: 0; background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.24); border-radius: 7px; overflow: hidden;
+}
+.topbar .controls .seg button {
+  border: none; border-radius: 0; background: transparent;
+  border-right: 1px solid rgba(255,255,255,0.18); padding: 6px 11px;
+}
+.topbar .controls .seg button:last-child { border-right: none; }
+.topbar .controls .seg button.active { background: rgba(255,255,255,0.40); font-weight: 600; }
 
 .app { display: flex; min-height: 100vh; }
 .sidebar {
@@ -222,6 +232,11 @@ mjx-container[display="true"]::-webkit-scrollbar-thumb { background: var(--borde
   <div class="controls">
     <a href="../index.html">🏠 导航</a>
     <a href="research.html">📄 研究报告</a>
+    <div class="seg" id="colSeg">
+      <button data-cols="1">单栏</button>
+      <button data-cols="2" class="active">两栏</button>
+      <button data-cols="3">三栏</button>
+    </div>
     <button onclick="window.print()">🖨️ 打印 / 导出 PDF</button>
   </div>
 </header>
@@ -679,6 +694,18 @@ const PAGES = [
   } else if (window.MathJax && window.MathJax.startup) {
     window.MathJax.startup.promise.then(function () { window.MathJax.typesetPromise(); });
   }
+})();
+
+(function () {
+  var segs = document.querySelectorAll('#colSeg button');
+  var masonries = document.querySelectorAll('.masonry');
+  segs.forEach(function (b) {
+    b.addEventListener('click', function () {
+      masonries.forEach(function (m) { m.style.columnCount = b.dataset.cols; });
+      segs.forEach(function (x) { x.classList.remove('active'); });
+      b.classList.add('active');
+    });
+  });
 })();
 </script>
 </body>
