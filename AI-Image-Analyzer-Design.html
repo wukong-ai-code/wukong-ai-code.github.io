@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Image Analyzer 软件产品建设方案（可执行 · v2）</title>
+<style>
+  :root{
+    --ink:#151b21; --ink-2:#3c4a57; --muted:#6b7a89; --line:#e4e9ee;
+    --bg:#f5f7fa; --card:#ffffff;
+    --base:#2b5f8e; --base-2:#4b87c4; --base-soft:#e8f0f7; --base-tint:#f1f6fb;
+    --herb:#2d6a4f; --herb-soft:#e8f3ec;
+    --food:#c8552b; --food-soft:#fbeee5;
+    --acc:#7a3fb0; --acc-soft:#f0e9f7;
+    --ok:#2e7d5b; --ok-soft:#e6f4ec;
+    --warn:#b23a48; --warn-soft:#fbeaec;
+    --radius:14px; --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Code","Consolas",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--bg);line-height:1.72;-webkit-font-smoothing:antialiased;font-size:15.5px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  header.hero{background:linear-gradient(135deg,#12324a 0%,#1d4b70 45%,#2d6a4f 100%);
+    color:#fff;padding:58px 0 50px;position:relative;overflow:hidden}
+  header.hero::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(820px 360px at 85% -10%,rgba(200,85,43,.30),transparent 60%);pointer-events:none}
+  .hero .kicker{font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:#9cc7e6;font-weight:600}
+  .hero h1{font-size:36px;line-height:1.18;margin:14px 0 12px;font-weight:800;letter-spacing:-.01em}
+  .hero p.sub{font-size:16px;color:#d5e4ef;max-width:800px}
+  .hero .meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+    padding:6px 13px;border-radius:999px;font-size:13px;color:#eaf4ef}
+
+  nav.toc{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav.toc .wrap{display:flex;gap:1px;overflow-x:auto;padding:9px 24px}
+  nav.toc a{white-space:nowrap;font-size:12.5px;color:var(--ink-2);text-decoration:none;
+    padding:6px 9px;border-radius:8px;font-weight:500;transition:.15s}
+  nav.toc a:hover{background:var(--bg);color:var(--ink)}
+
+  section{padding:46px 0 6px}
+  h2.sec{font-size:25px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  h2.sec .num{font-size:14px;font-weight:700;color:#fff;background:var(--base);
+    width:33px;height:33px;display:grid;place-items:center;border-radius:10px;flex:none}
+  h2.sec.hi .num{background:var(--acc)}
+  .lead{color:var(--muted);font-size:15.5px;margin:10px 0 22px;max-width:870px}
+  h3{font-size:18px;font-weight:750;margin:26px 0 10px}
+  h4{font-size:15px;font-weight:700;margin:15px 0 6px;color:var(--ink-2)}
+  p{margin:9px 0;color:var(--ink-2)}
+  ul,ol{margin:9px 0 9px 4px;padding-left:20px;color:var(--ink-2)}
+  li{margin:5px 0}
+  strong{color:var(--ink);font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 22px;box-shadow:var(--shadow);margin:15px 0}
+  .grid{display:grid;gap:15px}
+  .grid.c2{grid-template-columns:1fr 1fr}
+  .grid.c3{grid-template-columns:repeat(3,1fr)}
+  .grid.c4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:860px){.grid.c2,.grid.c3,.grid.c4{grid-template-columns:1fr}}
+
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px;text-align:center}
+  .stat .big{font-size:25px;font-weight:800;letter-spacing:-.02em;color:var(--base)}
+  .stat .lbl{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  table{width:100%;border-collapse:collapse;margin:13px 0;font-size:13.6px;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg);font-weight:700;color:var(--ink);font-size:12.5px}
+  tr:last-child td{border-bottom:none}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--base-soft);color:var(--base);padding:1.5px 6px;border-radius:5px}
+
+  .layer{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:15px 0}
+  .layer .band{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
+  .layer .band:last-child{border-bottom:none}
+  .layer .tagcol{flex:none;width:116px;background:var(--base);color:#fff;font-weight:700;font-size:12.5px;
+    display:flex;align-items:center;justify-content:center;text-align:center;padding:11px}
+  .layer .band.b2 .tagcol{background:var(--base-2)}
+  .layer .band.b3 .tagcol{background:var(--acc)}
+  .layer .band.b4 .tagcol{background:var(--herb)}
+  .layer .band.b5 .tagcol{background:#546170}
+  .layer .content{flex:1;padding:11px 13px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;background:var(--card)}
+  .box{background:var(--base-tint);border:1px solid var(--base-soft);border-radius:8px;
+    padding:6px 11px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;margin:16px 0}
+  .flow .step{flex:1;min-width:115px;background:var(--base-tint);border:1px solid var(--base-soft);
+    padding:11px 10px;position:relative;display:flex;flex-direction:column;gap:3px}
+  .flow .step:first-child{border-radius:10px 0 0 10px}
+  .flow .step:last-child{border-radius:0 10px 10px 0}
+  .flow .step .t{font-weight:750;font-size:12.5px;color:var(--ink)}
+  .flow .step .d{font-size:11px;color:var(--muted);line-height:1.45}
+  .flow .step .n{font-size:10px;font-weight:700;color:var(--base)}
+  .flow .step:not(:last-child)::after{content:"›";position:absolute;right:-9px;top:50%;
+    transform:translateY(-50%);z-index:2;font-size:19px;color:var(--muted);font-weight:700;background:var(--bg);width:18px;text-align:center}
+
+  .note{border-radius:10px;padding:13px 16px;margin:14px 0;font-size:13.6px;border:1px solid}
+  .note .h{font-weight:750;display:block;margin-bottom:2px}
+  .note.warn{background:var(--warn-soft);border-color:#f0cdd2;color:#6d2731}.note.warn .h{color:var(--warn)}
+  .note.info{background:var(--base-soft);border-color:#cfe0ef;color:#254867}.note.info .h{color:var(--base)}
+  .note.ok{background:var(--ok-soft);border-color:#c3e6d2;color:#1f5c40}.note.ok .h{color:var(--ok)}
+  .note.acc{background:var(--acc-soft);border-color:#dcc9ee;color:#4e2a72}.note.acc .h{color:var(--acc)}
+
+  pre{background:#0f1b2a;color:#d8e6f2;border-radius:12px;padding:15px 17px;overflow-x:auto;
+    font-family:var(--mono);font-size:12.5px;line-height:1.6;margin:13px 0}
+  pre .k{color:#7fb3e6} pre .c{color:#5f7488;font-style:italic} pre .s{color:#e6c07b} pre .m{color:#c99be0}
+
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin:1px 3px 1px 0}
+  .tag.p0{background:var(--warn-soft);color:var(--warn)}
+  .tag.p1{background:#fff2e0;color:#b5730a}
+  .tag.p2{background:var(--base-soft);color:var(--base)}
+  .tag.ok{background:var(--ok-soft);color:var(--ok)}
+  .tag.gray{background:#eef1f4;color:var(--muted)}
+
+  /* knowledge 4-layer */
+  .kdiag{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+  .kbox{border-radius:12px;padding:14px 16px;border:1px solid}
+  .kbox .kt{font-weight:800;font-size:14.5px;margin-bottom:3px;display:flex;align-items:center;gap:7px}
+  .kbox .kd{font-size:12.5px}
+  .kbox.rag{background:var(--base-tint);border-color:var(--base-soft)}.kbox.rag .kt{color:var(--base)}
+  .kbox.skill{background:var(--herb-soft);border-color:#c9e6d5}.kbox.skill .kt{color:var(--herb)}
+  .kbox.mem{background:var(--food-soft);border-color:#f2d6c4}.kbox.mem .kt{color:var(--food)}
+  .kbox.wiki{background:var(--acc-soft);border-color:#dcc9ee}.kbox.wiki .kt{color:var(--acc)}
+
+  .gantt{margin:16px 0;font-size:13px}
+  .gantt .head,.gantt .row{display:grid;grid-template-columns:150px repeat(12,1fr);align-items:center}
+  .gantt .head{font-size:11px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .gantt .head span{text-align:center}
+  .gantt .row{padding:5px 0}
+  .gantt .row .name{font-weight:600;font-size:12.5px;padding-right:8px}
+  .gantt .track{grid-column:2 / span 12;position:relative;height:22px}
+  .gantt .bar{position:absolute;height:16px;top:3px;border-radius:5px;color:#fff;font-size:10.5px;
+    font-weight:700;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+  .g-m0{background:#546170}.g-m1{background:var(--food)}.g-m2{background:var(--base)}
+  .g-m3{background:var(--base-2)}.g-m4{background:var(--herb)}
+
+  footer{margin-top:50px;padding:30px 0 54px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px}
+  .anchor{scroll-margin-top:66px}
+  .muted{color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+
+<header class="hero"><div class="wrap">
+  <div class="kicker">Software Product Build Plan · v2 可执行</div>
+  <h1>AI Image Analyzer 软件产品建设方案</h1>
+  <p class="sub">将《技术调研 / 实施方案》落地为可开工的软件产品：<strong style="color:#fff">膳食营养 App 为 P0 首发</strong>，<strong style="color:#fff">杭白菊种植管理为 P1</strong>。v2 相较初稿补齐了<strong style="color:#fff">产品竞争力（竞品/留存/商业模式）</strong>、<strong style="color:#fff">知识沉淀四层架构</strong>与<strong style="color:#fff">两个技术攻坚专题</strong>。</p>
+  <div class="meta">
+    <span class="chip">📅 2026-07-03 · v2</span>
+    <span class="chip">🎯 首发：膳食营养</span>
+    <span class="chip">🧠 知识沉淀：RAG+Skills+记忆+Wiki</span>
+    <span class="chip">⏱️ MVP ~14 周</span>
+  </div>
+</div></header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#s0">0 概述</a>
+  <a href="#s1">1 产品竞争力</a>
+  <a href="#s2">2 功能架构</a>
+  <a href="#s3">3 系统架构</a>
+  <a href="#s4">4 AI/模型选型</a>
+  <a href="#s5">5 知识沉淀架构★</a>
+  <a href="#s6">6 技术攻坚专题★</a>
+  <a href="#s7">7 数据模型</a>
+  <a href="#s8">8 API</a>
+  <a href="#s9">9 排期</a>
+  <a href="#s10">10 人力/成本</a>
+  <a href="#s11">11 部署</a>
+  <a href="#s12">12 风险验收</a>
+</div></nav>
+
+<!-- 0 概述 -->
+<section id="s0" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">0</span>产品概述与策略</h2>
+  <p class="lead">目标：交付一款以图像为入口的 AI 健康/农业分析产品。策略：<strong>单场景 MVP 快速验证 → 复用底座横向扩展</strong>，控制首期风险。</p>
+  <div class="grid c4">
+    <div class="stat"><div class="big">P0</div><div class="lbl">膳食营养 App 首发</div></div>
+    <div class="stat"><div class="big">14 周</div><div class="lbl">MVP 到可用上线</div></div>
+    <div class="stat"><div class="big">6–8 人</div><div class="lbl">核心团队规模</div></div>
+    <div class="stat"><div class="big">4 层</div><div class="lbl">知识沉淀体系</div></div>
+  </div>
+  <div class="note info"><span class="h">关键假设（可调整）</span>
+    ① 首发聚焦<strong>膳食营养</strong>（链路短、直接调多模态大模型、无需自采数据训练）；
+    ② 杭白菊种植管理为 <span class="tag p1">P1</span>，需田间数据积累，与底座并行；
+    ③ 客户端以<strong>微信小程序</strong>为主入口。优先级不同则排期平移。</div>
+  <h3>0.1 定位与优先级</h3>
+  <table>
+    <tr><th>产品线</th><th>一句话定位</th><th>目标用户</th><th>优先级</th></tr>
+    <tr><td>膳食营养助手</td><td>拍一张餐食照片，得营养成分 + 结合你身体状况的膳食建议</td><td>健康管理/减重/慢病人群、营养师</td><td><span class="tag p0">P0</span></td></tr>
+    <tr><td>杭白菊种植管家</td><td>拍田，看长势、早发现病害、预估产量</td><td>种植科研、农技员、基地</td><td><span class="tag p1">P1</span></td></tr>
+  </table>
+</div></section>
+
+<!-- 1 产品竞争力（新增，补自评硬伤） -->
+<section id="s1" class="anchor"><div class="wrap">
+  <h2 class="sec hi"><span class="num">1</span>产品竞争力：竞品 · 差异化 · 留存 · 商业模式</h2>
+  <p class="lead">技术可行不等于产品成立。本章回答"要不要做、凭什么赢、用户为何持续用、如何赚钱"——这是初稿缺失、经自评补齐的核心。</p>
+
+  <div class="note warn"><span class="h">赛道最大的两个"死因"（必须正面应对）</span>
+    ① <strong>准确性预期落差</strong>：AI 营养数字是估算（识别×份量×映射误差累乘），用户若期待"精确热量计"必然失望；
+    ② <strong>记录留存差</strong>：饮食记录类产品头号死因是"用户懒得每餐拍"。<strong>本方案把留存列为北极星，而非把识别精度当唯一目标。</strong></div>
+
+  <h3>1.1 竞品与差异化</h3>
+  <table>
+    <tr><th>类型</th><th>代表</th><th>短板</th><th>我们的差异化</th></tr>
+    <tr><td>记录/热量类</td><td>薄荷健康、Keep 饮食、Yazio</td><td>多靠手动搜索录入，拍照识别弱、无个体化建议闭环</td><td>拍照即得 + <strong>结合个体状态的可执行建议</strong></td></tr>
+    <tr><td>AI 拍照类</td><td>Cal AI 等</td><td>西式食物为主，中式菜/食材识别弱，营养库非本土</td><td><strong>中式菜 + 中国食物成分表</strong>本土化</td></tr>
+    <tr><td>专业/慢病</td><td>医院营养科系统</td><td>重、贵、非日常</td><td>轻量日常 + 慢病模块，B/C 兼顾</td></tr>
+  </table>
+  <p><strong>差异化定位一句话：</strong>"最懂<strong>中式家常菜</strong>、并把营养换成<strong>结合你身体状况的下一步行动</strong>的拍照助手"——不做"最准的热量计"，做"最有用的膳食教练"。</p>
+
+  <h3>1.2 留存策略（北极星驱动）</h3>
+  <div class="grid c2">
+    <div class="card"><h4>降低记录门槛</h4>
+      <ul>
+        <li>拍照 3 秒出结果，一键确认，绝不逼用户填表。</li>
+        <li>常吃菜"一键复记"；支持一天补记。</li>
+        <li>识别不准时用"选择/微调"代替"重填"。</li>
+      </ul>
+    </div>
+    <div class="card"><h4>制造回访理由</h4>
+      <ul>
+        <li>每餐后即时、个性化的一句话建议（即时反馈）。</li>
+        <li>每日/每周营养趋势与目标达成度。</li>
+        <li>轻量目标与连续记录激励（streak）。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>1.3 商业模式与北极星</h3>
+  <div class="grid c3">
+    <div class="card"><h4>C 端</h4><p>基础免费 + 会员订阅（慢病方案、深度报告、无限历史）。</p></div>
+    <div class="card"><h4>B 端</h4><p>医院营养科/体检/企业食堂 API 与报表；健康管理机构白标。</p></div>
+    <div class="card"><h4>北极星指标</h4><p><strong>次周留存</strong>与<strong>周人均记录餐数</strong>为核心；识别精度、建议满意度为支撑指标。</p></div>
+  </div>
+</div></section>
+
+<!-- 2 功能架构 -->
+<section id="s2" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">2</span>产品功能架构</h2>
+  <div class="layer">
+    <div class="band"><div class="tagcol">C 端<br>小程序</div><div class="content">
+      <span class="box">拍照/上传</span><span class="box">识别结果卡</span><span class="box">对话式澄清</span>
+      <span class="box">营养详情</span><span class="box">个体档案</span><span class="box">个性化建议</span>
+      <span class="box">饮食日记</span><span class="box">日/周趋势</span><span class="box">一键复记</span>
+    </div></div>
+    <div class="band b2"><div class="tagcol">运营<br>后台</div><div class="content">
+      <span class="box">用户管理</span><span class="box">结果审核</span><span class="box">食物库维护</span>
+      <span class="box">建议模板</span><span class="box">数据看板</span><span class="box">反馈处理</span>
+    </div></div>
+    <div class="band b3"><div class="tagcol">AI/知识<br>管理台</div><div class="content">
+      <span class="box">模型路由配置</span><span class="box">Prompt/Schema 版本</span><span class="box">RAG 导入</span>
+      <span class="box">Skills 规程编辑</span><span class="box">Wiki 审校</span><span class="box">评测/回归</span><span class="box">调用/成本监控</span>
+    </div></div>
+  </div>
+  <h3>2.1 功能优先级矩阵（P0）</h3>
+  <table>
+    <tr><th>模块</th><th>功能</th><th>优先级</th></tr>
+    <tr><td>识别</td><td>单图菜品/食材识别 · 份量估计</td><td><span class="tag p0">P0</span></td></tr>
+    <tr><td>识别</td><td>对话式澄清</td><td><span class="tag p1">P1</span></td></tr>
+    <tr><td>营养</td><td>营养成分核算（RAG 对齐成分表）</td><td><span class="tag p0">P0</span></td></tr>
+    <tr><td>个性化</td><td>个体档案 + 目标计算 + 建议</td><td><span class="tag p0">P0</span></td></tr>
+    <tr><td>个性化</td><td>慢病差异化建议</td><td><span class="tag p1">P1</span></td></tr>
+    <tr><td>记录/留存</td><td>饮食日记 + 趋势 + 一键复记</td><td><span class="tag p0">P0</span></td></tr>
+  </table>
+</div></section>
+
+<!-- 3 系统架构 -->
+<section id="s3" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">3</span>系统技术架构</h2>
+  <div class="layer">
+    <div class="band"><div class="tagcol">客户端</div><div class="content">
+      <span class="box">微信小程序（Taro/原生）</span><span class="box">Web 后台（React+Vite）</span><span class="box">端侧预筛（可选）</span>
+    </div></div>
+    <div class="band b2"><div class="tagcol">接入层</div><div class="content">
+      <span class="box">API 网关/BFF</span><span class="box">鉴权 JWT</span><span class="box">限流·审计</span><span class="box">图片直传</span>
+    </div></div>
+    <div class="band b3"><div class="tagcol">应用服务</div><div class="content">
+      <span class="box">用户/档案</span><span class="box">识别编排</span><span class="box">营养计算引擎</span><span class="box">建议引擎</span><span class="box">记录/统计</span>
+    </div></div>
+    <div class="band b4"><div class="tagcol">AI 服务</div><div class="content">
+      <span class="box">模型路由器</span><span class="box">MLLM 适配（Claude/Qwen）</span><span class="box">RAG 检索</span><span class="box">Skills 执行</span><span class="box">结构化校验</span>
+    </div></div>
+    <div class="band b5"><div class="tagcol">数据层</div><div class="content">
+      <span class="box">PostgreSQL</span><span class="box">pgvector</span><span class="box">Redis</span><span class="box">对象存储</span><span class="box">记忆库</span><span class="box">监控 Prom+Loki</span>
+    </div></div>
+  </div>
+  <h3>3.1 技术栈</h3>
+  <table>
+    <tr><th>层</th><th>选型</th><th>理由</th></tr>
+    <tr><td>C 端</td><td>微信小程序（Taro 3/原生）</td><td>拍照场景天然、免安装、获客低</td></tr>
+    <tr><td>后端</td><td>Python 3.12 + FastAPI</td><td>AI 生态友好、异步、Pydantic 强约束</td></tr>
+    <tr><td>AI 编排</td><td>自研 Router + LlamaIndex（RAG）</td><td>多模型路由 + 检索增强</td></tr>
+    <tr><td>数据库</td><td>PostgreSQL 16 + pgvector</td><td>关系+向量一体，运维简单</td></tr>
+    <tr><td>缓存/存储</td><td>Redis 7 + OSS/MinIO</td><td>缓存、异步、图片直传</td></tr>
+    <tr><td>部署</td><td>docker-compose → K8s</td><td>渐进式，不过度设计</td></tr>
+  </table>
+</div></section>
+
+<!-- 4 AI 模型 -->
+<section id="s4" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">4</span>AI 能力与模型选型</h2>
+  <div class="flow">
+    <div class="step"><span class="n">01</span><span class="t">预处理</span><span class="d">压缩/EXIF/餐具参照</span></div>
+    <div class="step"><span class="n">02</span><span class="t">模型路由</span><span class="d">按复杂度/档案选模型</span></div>
+    <div class="step"><span class="n">03</span><span class="t">MLLM 识别</span><span class="d">结构化 JSON</span></div>
+    <div class="step"><span class="n">04</span><span class="t">RAG 对齐</span><span class="d">成分表匹配</span></div>
+    <div class="step"><span class="n">05</span><span class="t">营养计算</span><span class="d">份量×成分×烹饪</span></div>
+    <div class="step"><span class="n">06</span><span class="t">建议</span><span class="d">档案+Skill+指南</span></div>
+  </div>
+  <div class="note warn"><span class="h">信息时效声明</span>
+    下表基于<strong>知识库（截至 2026-01）+ Claude 官方模型序列</strong>；编制时联网不可用，GPT-5/Gemini 2.5+/Qwen3-VL 等竞品最新版未纳入实测，<strong>上线前以真实评测集复核</strong>（中式菜 Top-5 / 结构化成功率 / 单次成本 / 建议质量）。</div>
+  <h3>4.1 路由式多模型选型</h3>
+  <table>
+    <tr><th>层级</th><th>推荐模型</th><th>用途</th><th>理由</th></tr>
+    <tr><td>主推理/疑难复核</td><td><code>Claude Opus 4.8</code></td><td>混合菜盘、低置信、慢病建议</td><td>顶级视觉+推理，结构化最稳，中文建议质量最高</td></tr>
+    <tr><td>均衡主力</td><td><code>Claude Sonnet 4.6</code></td><td>多数日常识别</td><td>精度/成本/延迟平衡</td></tr>
+    <tr><td>高频走量</td><td><code>Haiku 4.5</code> / 自托管 <code>Qwen-VL</code></td><td>大流量常规识别</td><td>Haiku 快省；Qwen 中文强、可私有化</td></tr>
+    <tr><td>端侧预筛</td><td>MobileViT/EfficientNet 蒸馏</td><td>离线过滤</td><td>即时、省调用</td></tr>
+    <tr><td>杭白菊 P1</td><td>Qwen-VL 微调 / DINOv2</td><td>病害/长势</td><td>小样本可微调、可私有化</td></tr>
+  </table>
+  <p><strong>路由策略：</strong>端侧/Sonnet 先识别 → 置信低/多菜混合/慢病档案 → 升级 Opus 4.8；结果强制 JSON Schema 校验；图片指纹命中缓存直返。<strong>健康数据合规</strong>需私有化时，主力放自托管 Qwen，Claude 仅疑难复核。</p>
+  <div class="note info"><span class="h">MVP 减法（自评修正）</span>MVP 阶段先<strong>固定单模型（Sonnet 4.6）跑通</strong>，路由与对话式澄清列为 M3 优化项——避免用复杂度拖慢"验证用户是否愿意持续拍"这一生死问题。</div>
+</div></section>
+
+<!-- 5 知识沉淀架构（核心新增，回答 B） -->
+<section id="s5" class="anchor"><div class="wrap">
+  <h2 class="sec hi"><span class="num">5</span>知识沉淀架构：RAG 之外的更优解</h2>
+  <p class="lead">核心洞察：<strong>RAG 不该被"替换"，而应被"分层"。</strong> RAG / Skills / 长期记忆 / LLM Wiki 不是竞品，而是承载不同「知识类型」的不同工具。纯 RAG 方案的错误在于把"流程"和"个体经验"硬塞进了"查事实"的工具。</p>
+
+  <h3>5.1 按知识类型选载体</h3>
+  <table>
+    <tr><th>知识类型</th><th>本项目示例</th><th>最佳载体</th><th>为什么不用 RAG</th></tr>
+    <tr><td>权威事实/数值</td><td>药典条目、食物成分表、DRIs 参考值</td><td><strong>RAG</strong> ✅</td><td>这正是 RAG 主场：可引用、可追溯、可热更新、抗幻觉</td></tr>
+    <tr><td>程序性专家经验（怎么判断）</td><td>病害诊断流程、膳食评估 SOP、鉴别决策树</td><td><strong>Skills</strong></td><td>RAG 只给文本碎片，模型仍需自组织判断，不稳定；Skill 固化<strong>流程本身</strong></td></tr>
+    <tr><td>个体/情境记忆</td><td>用户过敏史/口味、地块历史病史、趋势</td><td><strong>长期记忆</strong></td><td>RAG 无状态、全局，无法沉淀渐进的个体经验</td></tr>
+    <tr><td>演进的经验共识</td><td>疑难 case 结论、内部判定标准</td><td><strong>LLM Wiki</strong></td><td>RAG 库缺治理（谁审/版本/冲突）；Wiki 给专家可编辑可审校入口</td></tr>
+  </table>
+
+  <h3>5.2 三条判断轴</h3>
+  <div class="grid c3">
+    <div class="card"><h4>① 是什么 vs 怎么做</h4><p>陈述性→RAG/Wiki；<strong>程序性→Skills</strong>。专家经验的精华恰是程序性的，这是纯 RAG 最大短板。</p></div>
+    <div class="card"><h4>② 全局 vs 个体</h4><p>全局共享→RAG/Skills/Wiki；<strong>随交互积累的个体→长期记忆</strong>。</p></div>
+    <div class="card"><h4>③ 谁维护/多久变</h4><p>机器自动更新→RAG 向量库；<strong>需人工审校治理→Wiki</strong>（版本+审阅流）。</p></div>
+  </div>
+
+  <h3>5.3 四层知识体系（Wiki 作治理入口）</h3>
+  <div class="kdiag">
+    <div class="kbox wiki" style="grid-column:1 / span 2"><div class="kt">🏛️ LLM Wiki — 真相源 / 治理层</div><div class="kd">专家（营养师/植保师）编辑与审校的入口，带版本与审阅流。向下同时供给 RAG（索引其内容）与 Skills（提炼为规程）。解决 RAG 库"谁维护、如何治理"的空白。</div></div>
+    <div class="kbox rag"><div class="kt">📚 RAG — 查事实</div><div class="kd">药典、食物成分表、DRIs、防治手册数值。向量检索 top-k，输出带可追溯引用，抗幻觉。</div></div>
+    <div class="kbox skill"><div class="kt">🧭 Skills — 走流程</div><div class="kd">诊断/评估的程序性规程封装为可复用技能，按需渐进加载；比检索文本更稳定地执行专家判断逻辑。</div></div>
+    <div class="kbox mem" style="grid-column:1 / span 2"><div class="kt">🧠 长期记忆 — 存个体</div><div class="kd">跨会话持久化用户/地块的情境经验：过敏忌口、口味、历史趋势、既往病史。让建议"记得你"，逐步个性化。</div></div>
+  </div>
+  <div class="note acc"><span class="h">一句话总结</span><strong>RAG 存事实、Skills 存流程、记忆存个体、Wiki 做治理。</strong>四者协同，而非二选一。</div>
+
+  <h3>5.4 落到两个场景</h3>
+  <table>
+    <tr><th>场景</th><th>RAG（事实）</th><th>Skills（流程）</th><th>长期记忆（个体）</th><th>Wiki（治理）</th></tr>
+    <tr><td>膳食营养</td><td>中国食物成分表、DRIs</td><td>营养师评估/建议 SOP</td><td>过敏、口味、历史摄入</td><td>建议模板打磨</td></tr>
+    <tr><td>杭白菊</td><td>防治手册药剂/剂量</td><td>病害诊断决策树（部位→症状→病程→鉴别）</td><td>每地块病史/长势</td><td>疑难 case 专家结论</td></tr>
+  </table>
+</div></section>
+
+<!-- 6 技术攻坚专题（补自评硬伤） -->
+<section id="s6" class="anchor"><div class="wrap">
+  <h2 class="sec hi"><span class="num">6</span>两个技术攻坚专题（决定成败）</h2>
+  <p class="lead">初稿把这两点用"一句话"糊过去了，实际是 M1 最大的误差源与工程风险，单列攻坚。</p>
+
+  <h3>6.1 菜品 → 食材 → 营养 的映射</h3>
+  <div class="note warn"><span class="h">难点</span>成分表按<strong>食材</strong>存（鸡蛋/番茄/油分开），识别出的是<strong>成品菜</strong>（番茄炒蛋）。需完成：菜→食材拆分、份量在食材间分配、<strong>烹饪吸油/吸糖量估计</strong>（最难，缺权威数据）。</div>
+  <ul>
+    <li><strong>建"标准菜谱-食材配比库"</strong>：常见中式菜的典型食材构成与比例，作为拆分先验（人工+营养师维护，进 Wiki 治理）。</li>
+    <li><strong>烹饪修正系数表</strong>：按烹饪方式（炒/炸/蒸/煮）附加油脂/糖分修正区间，而非点值。</li>
+    <li><strong>MLLM 直接输出食材级份量</strong>作为补充，与配比库交叉校验。</li>
+    <li><strong>误差透明</strong>：营养值一律给区间，标注"估算"。</li>
+  </ul>
+
+  <h3>6.2 份量估计</h3>
+  <div class="note warn"><span class="h">难点</span>单张随手拍中，餐具尺寸未知、俯拍角度、遮挡都会毁掉估计——全行业未解难题。</div>
+  <ul>
+    <li><strong>标准餐具库</strong>：以常见碗/盘/勺尺寸为参照做体积→质量换算。</li>
+    <li><strong>对话式补充</strong>：低置信时追问"用的什么碗/大概几口"，用最小负担换精度（调研：补充食材质量可显著降误）。</li>
+    <li><strong>区间而非点值</strong>：份量、营养全程区间输出，管理用户预期。</li>
+    <li><strong>P1 进阶</strong>：双视角/深度传感器。</li>
+  </ul>
+  <div class="note ok"><span class="h">价值主张诚实降级</span>对外定位为<strong>"膳食趋势管理工具"</strong>而非"精确热量计"——避免准确性预期落差这一赛道死因。</div>
+</div></section>
+
+<!-- 7 数据模型 -->
+<section id="s7" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">7</span>数据模型</h2>
+  <table>
+    <tr><th>表</th><th>关键字段</th><th>说明</th></tr>
+    <tr><td><code>users</code></td><td>id, openid, phone, created_at</td><td>用户账号</td></tr>
+    <tr><td><code>health_profiles</code></td><td>user_id, age, gender, height, weight, activity, goal, chronic_tags[], allergies[]</td><td>个体档案</td></tr>
+    <tr><td><code>meal_records</code></td><td>id, user_id, image_url, meal_type, taken_at, status</td><td>一餐</td></tr>
+    <tr><td><code>recognitions</code></td><td>meal_id, dishes(jsonb), model_used, confidence</td><td>识别结果</td></tr>
+    <tr><td><code>nutrition_results</code></td><td>meal_id, energy, protein, fat, carb, sodium, interval(jsonb)</td><td>营养（含区间）</td></tr>
+    <tr><td><code>advices</code></td><td>user_id, scope, content, sources(jsonb)</td><td>建议+来源</td></tr>
+    <tr><td><code>food_items</code></td><td>id, name, aliases[], per100g(jsonb), source</td><td>成分表结构化</td></tr>
+    <tr><td><code>dish_recipes</code></td><td>dish, ingredients(jsonb: 食材+比例), cook_factor</td><td>菜谱配比库（§6.1）</td></tr>
+    <tr><td><code>kb_chunks</code></td><td>id, source, text, embedding vector(1024)</td><td>RAG 向量块</td></tr>
+    <tr><td><code>user_memory</code></td><td>user_id, key, value, updated_at</td><td>长期记忆（个体经验）</td></tr>
+  </table>
+</div></section>
+
+<!-- 8 API -->
+<section id="s8" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">8</span>核心 API（REST）</h2>
+  <table>
+    <tr><th>方法 / 路径</th><th>功能</th></tr>
+    <tr><td><code>POST /v1/auth/login</code></td><td>微信登录</td></tr>
+    <tr><td><code>PUT /v1/profile</code></td><td>创建/更新个体档案 → 返回营养目标</td></tr>
+    <tr><td><code>POST /v1/uploads/sign</code></td><td>图片直传签名</td></tr>
+    <tr><td><code>POST /v1/meals</code></td><td>提交识别 → 返回识别+营养+建议</td></tr>
+    <tr><td><code>POST /v1/meals/{id}/clarify</code></td><td>对话式澄清补充</td></tr>
+    <tr><td><code>GET /v1/stats/trend</code></td><td>日/周营养趋势</td></tr>
+    <tr><td><code>POST /v1/meals/{id}/repeat</code></td><td>一键复记（留存）</td></tr>
+  </table>
+  <pre><span class="c"># POST /v1/meals</span>
+<span class="m">Request</span> : { <span class="k">"image_url"</span>: <span class="s">"oss://.../a.jpg"</span>, <span class="k">"meal_type"</span>: <span class="s">"lunch"</span> }
+<span class="m">Response</span>: { <span class="k">"meal_id"</span>:1024, <span class="k">"dishes"</span>:[...], <span class="k">"nutrition"</span>:{<span class="k">"energy_kcal"</span>:{<span class="k">"est"</span>:520,<span class="k">"low"</span>:430,<span class="k">"high"</span>:640}},
+            <span class="k">"advice"</span>: <span class="s">"蛋白质充足，钠偏高，晚餐建议清淡少盐[指南来源]"</span> }</pre>
+</div></section>
+
+<!-- 9 排期 -->
+<section id="s9" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">9</span>迭代排期</h2>
+  <div class="gantt">
+    <div class="head"><span></span><span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span><span>W7</span><span>W8</span><span>W9</span><span>W10</span><span>W11</span><span>W12</span></div>
+    <div class="row"><span class="name">M0 基建/底座</span><div class="track"><div class="bar g-m0" style="left:0;width:16.6%">M0 脚手架</div></div></div>
+    <div class="row"><span class="name">M1 识别+营养</span><div class="track"><div class="bar g-m1" style="left:16.6%;width:25%">M1 核心链路</div></div></div>
+    <div class="row"><span class="name">M2 个体化+记录</span><div class="track"><div class="bar g-m2" style="left:41.6%;width:25%">M2 个性化+留存</div></div></div>
+    <div class="row"><span class="name">M3 打磨+上线</span><div class="track"><div class="bar g-m3" style="left:66.6%;width:25%">M3 路由/澄清/公测</div></div></div>
+    <div class="row"><span class="name">P1 杭白菊</span><div class="track"><div class="bar g-m4" style="left:83.3%;width:16.7%">M4 启动…</div></div></div>
+  </div>
+  <table>
+    <tr><th>里程碑</th><th>周期</th><th>交付</th><th>验收门槛</th></tr>
+    <tr><td>M0 基建</td><td>W1–2</td><td>脚手架、CI/CD、DB、存储、食物库+菜谱配比库导入</td><td>跑通"上传→存储→空识别"</td></tr>
+    <tr><td>M1 识别+营养</td><td>W3–5</td><td>单模型识别、RAG 对齐、菜→食材映射、营养计算</td><td>Top-5≥90%、营养区间输出</td></tr>
+    <tr><td>M2 个体化+记录</td><td>W6–8</td><td>档案、建议引擎（Skill+RAG）、日记、趋势、一键复记</td><td>次周留存基线、建议满意度</td></tr>
+    <tr><td>M3 打磨+上线</td><td>W9–12</td><td>模型路由、对话澄清、性能/成本、灰度、合规</td><td>内测→公测、SLA 达标</td></tr>
+    <tr><td>M4 杭白菊 P1</td><td>W11+</td><td>田间采集、病害/长势、产量预测</td><td>早期病害召回≥90%</td></tr>
+  </table>
+  <p class="muted">周数为工作量示意，非承诺工期；微信医疗健康类目审核周期不可控，需预留缓冲。</p>
+</div></section>
+
+<!-- 10 人力/成本 -->
+<section id="s10" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">10</span>人力与成本</h2>
+  <div class="grid c2">
+    <div class="card"><h4>团队（P0，6–8 人）</h4>
+      <table>
+        <tr><th>角色</th><th>人数</th></tr>
+        <tr><td>产品经理</td><td>1</td></tr>
+        <tr><td>后端/AI 工程</td><td>2</td></tr>
+        <tr><td>前端（小程序+后台）</td><td>1–2</td></tr>
+        <tr><td>算法工程</td><td>1</td></tr>
+        <tr><td>测试/QA</td><td>1</td></tr>
+        <tr><td>营养师（顾问）</td><td>0.5</td></tr>
+      </table>
+    </div>
+    <div class="card"><h4>人月与成本量级</h4>
+      <table>
+        <tr><th>项</th><th>量级</th></tr>
+        <tr><td>P0 研发</td><td>~28 人月（一次性）</td></tr>
+        <tr><td>AI 推理</td><td>随 DAU 线性，靠路由/缓存/端侧预筛控制</td></tr>
+        <tr><td>基础设施</td><td>起步单机低，弹性扩</td></tr>
+        <tr><td>P1 增量</td><td>~20–30 人月（含田间数据）</td></tr>
+      </table>
+      <p class="muted">杭白菊与膳食除"视觉+RAG"抽象层外，数据/模型/评测/部署几乎不复用，P1 增量不可低估。</p>
+    </div>
+  </div>
+  <div class="note ok"><span class="h">AI 降本三板斧</span>能用小模型不用大模型（路由）+ 结果缓存 + 端侧预筛；高并发下自托管 Qwen 摊薄单次成本并满足合规。</div>
+</div></section>
+
+<!-- 11 部署 -->
+<section id="s11" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">11</span>部署、运维与质量</h2>
+  <div class="grid c2">
+    <div class="card"><h4>环境与交付</h4>
+      <ul>
+        <li>三环境 dev/staging/prod；CI/CD 自动测试→镜像→灰度。</li>
+        <li>起步 docker-compose 单机，放量迁 K8s。</li>
+        <li>AI 层独立部署，模型/Prompt/RAG/Skills/Wiki 热更新不停业务。</li>
+      </ul>
+    </div>
+    <div class="card"><h4>质量与评测闭环</h4>
+      <ul>
+        <li>固定中式餐食评测集，每次模型/Prompt 变更跑回归。</li>
+        <li>新模型影子上线对比达标再灰度。</li>
+        <li>用户/营养师修正回流训练与菜谱配比库、Wiki。</li>
+        <li>监控：调用量、P95、成本、置信分布、告警。</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- 12 风险验收 -->
+<section id="s12" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">12</span>风险、合规与验收</h2>
+  <div class="grid c2">
+    <div class="card"><h4>风险与对策</h4>
+      <table>
+        <tr><th>风险</th><th>对策</th></tr>
+        <tr><td>用户懒得记录（头号死因）</td><td>3 秒出结果、一键复记、即时建议反馈</td></tr>
+        <tr><td>营养准确性预期落差</td><td>价值主张降级为趋势管理、全程区间输出</td></tr>
+        <tr><td>菜→食材映射误差</td><td>菜谱配比库 + 烹饪修正系数 + 交叉校验</td></tr>
+        <tr><td>MLLM 幻觉</td><td>RAG 强锚定，数值只取检索结果</td></tr>
+        <tr><td>AI 成本超预算</td><td>路由+缓存+端侧预筛</td></tr>
+        <tr><td>模型选型过时</td><td>上线前评测集复核，路由可热切换</td></tr>
+      </table>
+    </div>
+    <div class="card"><h4>合规红线</h4>
+      <ul>
+        <li>《个人信息保护法》：健康数据最小化、加密、明确授权。</li>
+        <li>建议非诊疗意见，慢病引导就医，界面明示免责。</li>
+        <li>小程序过微信医疗健康类目审核。</li>
+        <li>第三方模型 API 数据出境/留存条款评估；敏感场景私有化。</li>
+      </ul>
+    </div>
+  </div>
+  <h3>12.1 MVP 上线验收清单（P0）</h3>
+  <table>
+    <tr><th>维度</th><th>标准</th></tr>
+    <tr><td>识别</td><td>中式菜 Top-5 ≥ 90%；结构化输出成功率 ≥ 99%</td></tr>
+    <tr><td>份量</td><td>图像-only MAPE ≤ 35%，补充后 ≤ 25%（区间形式）</td></tr>
+    <tr><td>建议</td><td>营养师抽检可用率 ≥ 90%；100% 附来源与免责</td></tr>
+    <tr><td>留存（北极星）</td><td>次周留存与周人均记录餐数达内测基线</td></tr>
+    <tr><td>性能</td><td>识别 P95 ≤ 6s；可用性 ≥ 99.5%</td></tr>
+    <tr><td>合规</td><td>通过隐私评估 + 小程序类目审核</td></tr>
+  </table>
+</div></section>
+
+<footer><div class="wrap">
+  <div>AI Image Analyzer · 软件产品建设方案 v2<br>承接《技术调研报告》《技术实施方案》</div>
+  <div style="text-align:right">编制 2026-07-03 · 首发膳食营养 MVP<br>知识沉淀：RAG事实 + Skills流程 + 记忆个体 + Wiki治理</div>
+</div></footer>
+
+</body>
+</html>
