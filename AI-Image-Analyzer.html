@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Image Analyzer 技术实施方案 · 杭白菊鉴别 & 膳食营养</title>
+<style>
+  :root{
+    --ink:#1a2027; --ink-2:#3c4a57; --muted:#6b7a89; --line:#e4e9ee;
+    --bg:#f6f8fa; --card:#ffffff;
+    --herb:#2d6a4f; --herb-2:#52b788; --herb-soft:#e8f3ec; --herb-tint:#f2f9f5;
+    --food:#c8552b; --food-2:#e9803f; --food-soft:#fbeee5; --food-tint:#fdf6f0;
+    --base:#2b5f8e; --base-soft:#e8f0f7;
+    --warn:#b23a48; --warn-soft:#fbeaec;
+    --radius:14px; --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Code","Consolas",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased;font-size:15.5px}
+
+  /* ---------- layout ---------- */
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  header.hero{
+    background:linear-gradient(135deg,#173a2e 0%,#1f4d3a 42%,#2b5f8e 100%);
+    color:#fff;padding:64px 0 56px;position:relative;overflow:hidden
+  }
+  header.hero::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(900px 380px at 82% -10%,rgba(233,128,63,.28),transparent 60%);pointer-events:none}
+  .hero .kicker{font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:#9fe0c1;font-weight:600}
+  .hero h1{font-size:38px;line-height:1.2;margin:14px 0 12px;font-weight:800;letter-spacing:-.01em}
+  .hero p.sub{font-size:17px;color:#d7e6df;max-width:760px}
+  .hero .meta{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+    padding:6px 13px;border-radius:999px;font-size:13px;color:#eaf4ef;backdrop-filter:blur(4px)}
+
+  /* ---------- sticky nav ---------- */
+  nav.toc{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav.toc .wrap{display:flex;gap:4px;overflow-x:auto;padding:10px 24px}
+  nav.toc a{white-space:nowrap;font-size:13.5px;color:var(--ink-2);text-decoration:none;
+    padding:7px 13px;border-radius:8px;font-weight:500;transition:.15s}
+  nav.toc a:hover{background:var(--bg);color:var(--ink)}
+
+  section{padding:52px 0 8px}
+  h2.sec{font-size:27px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  h2.sec .num{font-size:15px;font-weight:700;color:#fff;background:var(--base);
+    width:34px;height:34px;display:grid;place-items:center;border-radius:10px;flex:none}
+  h2.sec.herb .num{background:var(--herb)} h2.sec.food .num{background:var(--food)}
+  .lead{color:var(--muted);font-size:16px;margin:10px 0 26px;max-width:820px}
+  h3{font-size:19px;font-weight:750;margin:30px 0 12px;color:var(--ink)}
+  h4{font-size:15.5px;font-weight:700;margin:18px 0 8px;color:var(--ink-2)}
+  p{margin:10px 0;color:var(--ink-2)}
+  ul,ol{margin:10px 0 10px 4px;padding-left:20px;color:var(--ink-2)}
+  li{margin:6px 0}
+  strong{color:var(--ink);font-weight:700}
+  a.ref{color:var(--base);text-decoration:none;font-weight:600;font-size:12px;vertical-align:super}
+
+  /* ---------- cards ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 26px;box-shadow:var(--shadow);margin:18px 0}
+  .card.herb{border-top:3px solid var(--herb)}
+  .card.food{border-top:3px solid var(--food)}
+  .grid{display:grid;gap:16px}
+  .grid.c2{grid-template-columns:1fr 1fr}
+  .grid.c3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:820px){.grid.c2,.grid.c3{grid-template-columns:1fr}}
+
+  /* ---------- stat ---------- */
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;text-align:center}
+  .stat .big{font-size:30px;font-weight:800;letter-spacing:-.02em}
+  .stat.herb .big{color:var(--herb)} .stat.food .big{color:var(--food)} .stat.base .big{color:var(--base)}
+  .stat .lbl{font-size:13px;color:var(--muted);margin-top:2px}
+
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg);font-weight:700;color:var(--ink);font-size:13px}
+  tr:last-child td{border-bottom:none}
+  td code,p code,li code{font-family:var(--mono);font-size:12.5px;background:var(--base-soft);
+    color:var(--base);padding:1.5px 6px;border-radius:5px}
+
+  /* ---------- pipeline diagram ---------- */
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:20px 0}
+  .flow .step{flex:1;min-width:130px;background:var(--herb-tint);border:1px solid var(--herb-soft);
+    padding:14px 12px;position:relative;display:flex;flex-direction:column;gap:4px}
+  .flow.food .step{background:var(--food-tint);border-color:var(--food-soft)}
+  .flow .step:first-child{border-radius:12px 0 0 12px}
+  .flow .step:last-child{border-radius:0 12px 12px 0}
+  .flow .step .t{font-weight:750;font-size:13.5px;color:var(--ink)}
+  .flow .step .d{font-size:12px;color:var(--muted);line-height:1.5}
+  .flow .step .n{font-size:11px;font-weight:700;color:var(--herb)}
+  .flow.food .step .n{color:var(--food)}
+  .flow .step:not(:last-child)::after{content:"›";position:absolute;right:-10px;top:50%;
+    transform:translateY(-50%);z-index:2;font-size:22px;color:var(--muted);font-weight:700;
+    background:var(--bg);width:20px;text-align:center}
+
+  /* ---------- callouts ---------- */
+  .note{border-radius:10px;padding:14px 18px;margin:16px 0;font-size:14px;border:1px solid}
+  .note .h{font-weight:750;display:block;margin-bottom:3px}
+  .note.warn{background:var(--warn-soft);border-color:#f0cdd2;color:#6d2731}
+  .note.warn .h{color:var(--warn)}
+  .note.info{background:var(--base-soft);border-color:#cfe0ef;color:#254867}
+  .note.info .h{color:var(--base)}
+  .note.tip{background:var(--herb-tint);border-color:var(--herb-soft);color:#215844}
+  .note.tip .h{color:var(--herb)}
+
+  /* ---------- code ---------- */
+  pre{background:#0f1b16;color:#d8e6de;border-radius:12px;padding:18px 20px;overflow-x:auto;
+    font-family:var(--mono);font-size:13px;line-height:1.65;margin:14px 0}
+  pre.food{background:#241410;color:#f0ddd0}
+  pre .k{color:#7fd1a8} pre.food .k{color:#f0a06a}
+  pre .c{color:#5f7a6d;font-style:italic} pre.food .c{color:#9a7a68}
+  pre .s{color:#e6c07b}
+
+  /* ---------- timeline ---------- */
+  .tl{position:relative;margin:24px 0 8px;padding-left:8px}
+  .tl .row{display:grid;grid-template-columns:120px 1fr;gap:18px;padding:14px 0;border-top:1px solid var(--line)}
+  .tl .row:first-child{border-top:none}
+  .tl .phase{font-weight:800;color:var(--base)}
+  .tl .phase .sub{display:block;font-size:12px;color:var(--muted);font-weight:500}
+  .tl .bar{height:8px;border-radius:5px;margin:8px 0 12px;
+    background:linear-gradient(90deg,var(--herb-2),var(--base))}
+  .tl ul{margin:0;padding-left:18px;font-size:13.5px}
+
+  /* ---------- badge / tag ---------- */
+  .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:6px;margin:2px 4px 2px 0}
+  .tag.herb{background:var(--herb-soft);color:var(--herb)}
+  .tag.food{background:var(--food-soft);color:var(--food)}
+  .tag.base{background:var(--base-soft);color:var(--base)}
+  .tag.gray{background:#eef1f4;color:var(--muted)}
+
+  footer{margin-top:56px;padding:34px 0 60px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px}
+  .divider{height:1px;background:var(--line);margin:6px 0}
+  .anchor{scroll-margin-top:70px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Technical Implementation Plan · 深化篇</div>
+    <h1>AI Image Analyzer 技术实施方案</h1>
+    <p class="sub">承接《AI Image Analyzer 技术调研报告》的结论，将两个垂直场景落地为可执行的工程方案：
+      <strong style="color:#fff">场景一 —— 杭白菊种植管理：长势·病害·产量智能分析</strong>；
+      <strong style="color:#fff">场景二 —— 日常膳食营养健康管理</strong>。</p>
+    <div class="meta">
+      <span class="chip">📅 编制日期：2026-07-03</span>
+      <span class="chip">🌿 场景一：杭白菊（杭州·种植管理）</span>
+      <span class="chip">🍚 场景二：中式日常膳食</span>
+      <span class="chip">🏗️ 架构：视觉基础模型 + MLLM + RAG</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#overview">总览</a>
+    <a href="#herb">① 杭白菊种植管理</a>
+    <a href="#food">② 膳食营养方案</a>
+    <a href="#platform">③ 共性技术底座</a>
+    <a href="#roadmap">④ 实施路线图</a>
+    <a href="#risk">⑤ 风险与合规</a>
+    <a href="#appendix">附录</a>
+  </div>
+</nav>
+
+<!-- ============ 总览 ============ -->
+<section id="overview" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">0</span>方案总览</h2>
+  <p class="lead">调研报告已确认技术路线：<strong>「基础模型 + 领域知识库检索增强（RAG）+ 专家闭环」</strong>的混合架构在两个领域均优于纯 CNN 传统路线。本方案将其具体化为两条可交付的产品线，并抽取共享的技术底座。</p>
+
+  <div class="grid c3">
+    <div class="stat herb"><div class="big">3 任务</div><div class="lbl">杭白菊：长势分析 · 早期病害 · 产量预测</div></div>
+    <div class="stat food"><div class="big">63%↓</div><div class="lbl">MLLM+RAG 营养估计 MAE 降幅（DietAI24）</div></div>
+    <div class="stat base"><div class="big">3 阶段</div><div class="lbl">MVP → RAG增强 → 数据闭环</div></div>
+  </div>
+
+  <h3>两条产品线的定位差异</h3>
+  <table>
+    <tr><th>维度</th><th>① 杭白菊种植管理</th><th>② 膳食营养</th></tr>
+    <tr><td>用户</td><td>种植科研 / 农艺技术员 / 种植基地 / 合作社</td><td>健康管理 / 减重 / 慢病膳食 / 营养科普</td></tr>
+    <tr><td>核心价值</td><td>长势可视化、病害早发现、产量可预估的精准种植</td><td>低负担记录 + 可信营养核算 + 个性化建议</td></tr>
+    <tr><td>主任务</td><td>长势态势分析 + 早期病害识别 + 产量预测</td><td>开放域识别 + 定量估计 + 建议生成</td></tr>
+    <tr><td>知识库锚点</td><td>杭白菊栽培技术规程、病虫害防治手册</td><td>《中国食物成分表》第6版、《膳食指南2022》</td></tr>
+    <tr><td>精度门槛</td><td>高（病害早期弱信号、防治决策依赖）</td><td>中（趋势管理容忍一定误差）</td></tr>
+    <tr><td>数据难度</td><td>田间时序采集、病害标注需植保专家</td><td>开放域海量、份量标注昂贵</td></tr>
+  </table>
+
+  <div class="note info"><span class="h">阅读指引</span>
+    两个场景各自独立成章（数据 → 模型 → 知识库 → 评估 → 部署），第 3 章抽取可复用的技术底座，第 4 章给出统一的分阶段落地计划，第 5 章覆盖风险与数据合规。</div>
+</div></section>
+
+<!-- ============ 场景一 杭白菊 ============ -->
+<section id="herb" class="anchor"><div class="wrap">
+  <h2 class="sec herb"><span class="num">1</span>场景一 · 杭白菊种植管理智能分析</h2>
+  <p class="lead">面向杭州及周边杭白菊种植科研与田间生产，以手机巡田、无人机航拍、田间定点相机采集的图像，实现<strong>生长态势分析、早期病虫害识别、产量预测</strong>三大任务，支撑精准种植与及时防治决策。</p>
+
+  <h3>1.1 领域背景与任务边界</h3>
+  <div class="card herb">
+    <h4>种植管理的核心痛点</h4>
+    <ul>
+      <li><strong>长势靠人工巡查</strong>：大田尺度长势不均难以量化，缺乏客观、可追溯的态势评估手段。</li>
+      <li><strong>病害发现滞后</strong>：叶枯/斑枯病、白锈病、霜霉病及蚜虫等一旦显性暴发已错过最佳防治窗口，<strong>早期弱信号识别</strong>价值最高。</li>
+      <li><strong>产量凭经验估计</strong>：杭白菊花期集中、采收窗口短，产量与采收时机预估直接影响用工与效益。</li>
+    </ul>
+    <h4>三类可落地任务</h4>
+    <table>
+      <tr><th>任务</th><th>输出</th><th>视觉可行性</th></tr>
+      <tr><td>T1 生长态势分析</td><td>物候期识别 + 冠层覆盖度/现蕾密度 + 长势分级（旺/中/弱）</td><td><span class="tag herb">高</span> 冠层与物候特征明显</td></tr>
+      <tr><td>T2 早期病虫害识别</td><td>病害类别 + 病斑定位/严重度 + 虫害预警</td><td><span class="tag herb">中高</span> 早期弱信号靠时序对比增强</td></tr>
+      <tr><td>T3 产量预测</td><td>花蕾/花朵计数 → 单位面积产量与采收窗口</td><td><span class="tag herb">中</span> 计数 + 时序 + 气象融合</td></tr>
+      <tr><td>T4（可选）胁迫诊断</td><td>缺素/水分胁迫致叶色黄化等</td><td><span class="tag herb">中</span> 多光谱可显著增强</td></tr>
+    </table>
+    <div class="note warn"><span class="h">诚实的技术边界</span>
+      土壤养分、有效成分含量、病原菌种类<strong>无法从 RGB 图像确诊</strong>，须结合土壤检测、镜检/分子鉴定。图像模型定位于<strong>可见长势与病症的早期筛查与量化</strong>，输出"疑似 + 建议复检/防治"，不替代植保诊断。无人机多光谱（NDVI 等）可增强长势与胁迫判读，但增加成本，按需分级引入。</div>
+  </div>
+
+  <h3>1.2 数据方案</h3>
+  <div class="grid c2">
+    <div class="card herb">
+      <h4>多源 + 时序采集</h4>
+      <ul>
+        <li><strong>手机巡田</strong>：近景叶片/花蕾特写，用于病害识别与计数标注。</li>
+        <li><strong>无人机航拍</strong>：小区/大田尺度冠层正射，可选多光谱通道计算植被指数（NDVI/GNDVI）。</li>
+        <li><strong>田间定点相机</strong>：固定机位定时拍摄，构建同一地块的<strong>生育期时序序列</strong>——早期病害与长势变化的关键。</li>
+        <li><strong>元数据</strong>：地块、生育期日期、品种、农事与气象记录（用于产量建模）。</li>
+      </ul>
+    </div>
+    <div class="card herb">
+      <h4>规模与标注</h4>
+      <ul>
+        <li><strong>MVP 目标</strong>：病害每类 ≥ 800 张（含早期/中/重分期）+ 充足健康对照；计数场景 ≥ 1k 张带花蕾点/框标注。</li>
+        <li><strong>标注</strong>：病害类别 + 病斑分割/严重度、花蕾花朵实例框、长势分级；<strong>植保/农艺专家仲裁</strong>。</li>
+        <li><strong>时序标注</strong>：同一地块跨期序列，支撑早期弱信号与产量回归。</li>
+        <li><strong>冷启动</strong>：DINOv2 zero-shot + 少量种子样本主动学习，优先送标最不确定样本。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>1.3 模型架构（检测/分类 + 时序 + RAG）</h3>
+  <div class="flow">
+    <div class="step"><span class="n">01</span><span class="t">多源采集/预处理</span><span class="d">航拍拼接配准、植被指数、去背景</span></div>
+    <div class="step"><span class="n">02</span><span class="t">检测/分割</span><span class="d">YOLOv8 花蕾计数 + 病斑定位分割</span></div>
+    <div class="step"><span class="n">03</span><span class="t">分类/分级</span><span class="d">DINOv2 病害细粒度 + 长势分级</span></div>
+    <div class="step"><span class="n">04</span><span class="t">时序融合</span><span class="d">长势曲线 + 气象 → 产量/采收窗口回归</span></div>
+    <div class="step"><span class="n">05</span><span class="t">防治 RAG</span><span class="d">对齐栽培规程/防治手册，出农艺建议</span></div>
+    <div class="step"><span class="n">06</span><span class="t">决策 + 复核</span><span class="d">预警/建议 + 依据 → 农艺专家闭环</span></div>
+  </div>
+  <div class="card herb">
+    <h4>选型理由</h4>
+    <ul>
+      <li><strong>骨干：DINOv2（自监督）</strong>——田间小样本、细粒度病症下特征优于从头训练 CNN；冻结骨干 + 轻量微调即可起步，契合调研报告"迁移学习起步、小样本友好"的结论。</li>
+      <li><strong>YOLOv8 实例分割</strong>——花蕾/花朵密集计数与病斑定位，支撑产量估计与严重度量化。</li>
+      <li><strong>时序建模是产量与早期病害的关键</strong>——将定点相机的长势指标序列 + 气象数据输入回归/时序模型，预测单产与采收窗口；早期病害靠"同地块跨期对比"放大弱信号，优于单帧判读。</li>
+      <li><strong>防治 RAG</strong>——把杭白菊栽培技术规程与病虫害防治手册向量化入库；识别出病害后检索对应条目，生成"疑似白锈病早期 → 及时通风控湿、参考 XX 药剂"式可追溯的农艺建议。</li>
+      <li><strong>可选 MLLM 复核层</strong>——疑难/低置信病症调用 Qwen-VL / GPT-4o 结合检索文本做二次判读与自然语言解释。</li>
+    </ul>
+  </div>
+
+  <h3>1.4 评估指标</h3>
+  <table>
+    <tr><th>任务</th><th>主指标</th><th>MVP 目标</th></tr>
+    <tr><td>T1 长势分级</td><td>分级准确率 + 与专家一致性 κ</td><td>κ ≥ 0.75；物候期识别 ≥ 90%</td></tr>
+    <tr><td>T2 病害识别</td><td>Top-1 + <strong>早期召回率</strong>；病斑 mIoU</td><td>早期召回 ≥ 90%（漏检代价高）</td></tr>
+    <tr><td>T3 花蕾计数</td><td>计数 MAE / MAPE</td><td>MAPE ≤ 15%</td></tr>
+    <tr><td>T3 产量预测</td><td>单产预测 MAPE（区间输出）</td><td>MAPE ≤ 20%（融合气象）</td></tr>
+    <tr><td>可解释性</td><td>防治建议条目引用正确率（人工抽检）</td><td>≥ 90%</td></tr>
+  </table>
+
+  <h3>1.5 部署形态</h3>
+  <div class="grid c2">
+    <div class="card herb"><h4>巡田 App / 小程序</h4><p>技术员手机拍照即出病害诊断、长势评级与防治建议；端侧轻量模型（EfficientNet 蒸馏版）离线快速筛查，云端 DINOv2+RAG 出详细报告与工单。</p></div>
+    <div class="card herb"><h4>无人机 + 边缘监测</h4><p>无人机航拍生成小区尺度长势/产量预估图；田间定点相机 + 边缘盒做生育期时序监测与病害早期预警，异常自动推送。</p></div>
+  </div>
+</div></section>
+
+<!-- ============ 场景二 膳食营养 ============ -->
+<section id="food" class="anchor"><div class="wrap">
+  <h2 class="sec food"><span class="num">2</span>场景二 · 日常膳食营养健康管理</h2>
+  <p class="lead">面向中国家庭日常餐食，构建"拍照 → 识别菜品/原材料 → 份量估计 → 营养成分核算 → <strong>结合个体状态</strong>的日常膳食建议"的对话式管线。核心遵循调研结论：<strong>MLLM + RAG 锚定权威营养库</strong>，并针对中式餐食的特殊难点做工程强化。</p>
+
+  <h3>2.1 中式餐食的特殊难点</h3>
+  <div class="grid c3">
+    <div class="card food"><h4>混合与共享</h4><p>一盘多食材（回锅肉含肉/青椒/蒜苗）、圆桌共享餐无法按人分份，需"整盘估计 + 摄入占比追问"。</p></div>
+    <div class="card food"><h4>烹饪隐性热量</h4><p>油炒/红烧带入大量看不见的油脂糖分，同一食材热量差异大，须引入"烹饪方式"维度修正。</p></div>
+    <div class="card food"><h4>份量与餐具</h4><p>碗/盘/勺尺寸差异大，单视角深度歧义；以标准餐具库 + 参照物 + 可选多视角降低误差。</p></div>
+  </div>
+
+  <h3>2.2 模型架构（对话式 MLLM + RAG）</h3>
+  <div class="flow food">
+    <div class="step"><span class="n">01</span><span class="t">MLLM 视觉理解</span><span class="d">菜品/食材/烹饪方式/餐具识别</span></div>
+    <div class="step"><span class="n">02</span><span class="t">份量估计</span><span class="d">餐具参照+（可选多视角/深度）→ 克重</span></div>
+    <div class="step"><span class="n">03</span><span class="t">RAG 对齐</span><span class="d">中国食物成分表检索匹配</span></div>
+    <div class="step"><span class="n">04</span><span class="t">营养计算</span><span class="d">热量+宏量/微量+GI 汇总</span></div>
+    <div class="step"><span class="n">05</span><span class="t">对话澄清</span><span class="d">按需追问食材/份量提升精度</span></div>
+    <div class="step"><span class="n">06</span><span class="t">个性化建议</span><span class="d">对齐膳食指南+慢病目标</span></div>
+  </div>
+  <div class="card food">
+    <h4>关键设计</h4>
+    <ul>
+      <li><strong>识别层用 MLLM（Qwen-VL / GPT-4o）</strong>而非纯检测网络：直接输出结构化 JSON（菜名、食材列表、估计份量、烹饪方式、置信度），对开放域中式菜更鲁棒——契合调研中 GPT-4o 取得最低整体 MAPE 的结论。<a class="ref" href="#refs">[17][19]</a></li>
+      <li><strong>RAG 锚定《中国食物成分表》</strong>：不依赖模型记忆的营养数值，而是把识别出的食材名检索本地化营养库（对齐 FNDDS/USDA 思路，但换成中国本土数据），杜绝幻觉、保证可复现。<a class="ref" href="#refs">[16]</a></li>
+      <li><strong>渐进式澄清（agentic）</strong>：默认仅凭图像给估算并标注置信区间；用户可选追加"食材/总重量"，误差随信息补充下降（调研：热量误差从 ~51% 图像-only 降到 ~29% 提供食材质量）。<a class="ref" href="#refs">[17]</a></li>
+      <li><strong>份量估计</strong>：以图中标准餐具尺寸为参照做体积→质量换算；进阶支持双视角或手机深度传感器。</li>
+    </ul>
+  </div>
+
+  <h3>2.3 营养计算与个性化建议引擎</h3>
+  <div class="grid c2">
+    <div class="card food">
+      <h4>营养核算</h4>
+      <ul>
+        <li>输出：能量（kcal）、三大宏量（碳水/蛋白/脂肪）、关键微量（钠/钙/铁/膳食纤维）、估算血糖生成指数。</li>
+        <li>误差呈现：每项给<strong>点估计 + 区间</strong>，透明传达不确定性，避免"伪精确"。</li>
+      </ul>
+    </div>
+    <div class="card food">
+      <h4>个体状态驱动的建议引擎（RAG on 指南）</h4>
+      <ul>
+        <li><strong>个体状态档案</strong>：年龄/性别/身高体重(BMI)/活动量/健康目标/慢病标签/过敏与忌口 → 计算个性化能量与营养素目标（RNI/AI）。</li>
+        <li>锚定《中国居民膳食指南 2022》八条准则与膳食宝塔，做当日摄入/趋势对照，给出"多吃·少吃·替换"的日常膳食建议。</li>
+        <li>慢病模块：糖尿病（控糖/GI）、高血压（限钠）、减重（能量缺口）差异化建议。</li>
+        <li>建议均附来源条目，保持可追溯，医学建议加免责声明。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>2.4 评估指标</h3>
+  <table>
+    <tr><th>环节</th><th>指标</th><th>MVP 目标</th></tr>
+    <tr><td>菜品识别</td><td>Top-1 / Top-5 准确率</td><td>Top-5 ≥ 90%（常见中式菜库）</td></tr>
+    <tr><td>份量估计</td><td>克重 MAE / MAPE</td><td>图像-only MAPE ≤ 35%，补充后 ≤ 25%</td></tr>
+    <tr><td>营养估计</td><td>能量及关键营养素 MAE</td><td>对齐 DietAI24 量级，优于纯 CNN 基线</td></tr>
+    <tr><td>建议质量</td><td>营养师评分（1–5）</td><td>≥ 4.0</td></tr>
+  </table>
+
+  <h3>2.5 部署形态</h3>
+  <div class="grid c2">
+    <div class="card food"><h4>C 端 App / 小程序</h4><p>拍照即记，对话式澄清，日/周营养趋势与建议推送；端侧做菜品快速预识别，云端 MLLM+RAG 做精算。</p></div>
+    <div class="card food"><h4>B 端（慢病/体检/食堂）</h4><p>医院营养科、体检中心、企业食堂 API：批量膳食评估与报表，接入既有健康档案。</p></div>
+  </div>
+</div></section>
+
+<!-- ============ 共性底座 ============ -->
+<section id="platform" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">3</span>共性技术底座</h2>
+  <p class="lead">两条产品线共享同一套"视觉基础模型 + RAG + 数据闭环"平台，仅知识库与分类头不同，最大化复用、降低边际成本。</p>
+
+  <div class="grid c2">
+    <div class="card">
+      <h4>统一技术栈</h4>
+      <table>
+        <tr><th>层</th><th>选型</th></tr>
+        <tr><td>视觉骨干</td><td>DINOv2 / CLIP（自监督基础模型）</td></tr>
+        <tr><td>检测分割</td><td>YOLOv8 / Mask R-CNN</td></tr>
+        <tr><td>多模态推理</td><td>Qwen-VL / GPT-4o（结构化输出）</td></tr>
+        <tr><td>向量检索</td><td>pgvector / Milvus</td></tr>
+        <tr><td>知识库</td><td>药典条目 · 中国食物成分表 · 膳食指南</td></tr>
+        <tr><td>服务</td><td>FastAPI + 端侧蒸馏模型（ONNX/TensorRT）</td></tr>
+        <tr><td>MLOps</td><td>数据版本 + 主动学习 + 在线评测</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4>数据闭环（护城河）</h4>
+      <ul>
+        <li><strong>专家反馈回流</strong>：质检员/营养师的每次修正即新标注，回流训练集。</li>
+        <li><strong>主动学习</strong>：优先送标模型最不确定 / RAG 无命中的样本。</li>
+        <li><strong>影子评测</strong>：新模型先旁路运行，与线上/专家对比达标再灰度上线。</li>
+        <li><strong>知识库热更新</strong>：药典/成分表/指南修订时只更新 RAG 库，无需重训模型。</li>
+      </ul>
+      <div class="note tip"><span class="h">复用要点</span>同一套检索与推理编排，杭白菊换"药典库+品种分类头"，膳食换"成分表库+菜品识别"，工程主体不变。</div>
+    </div>
+  </div>
+
+  <h3>3.1 结构化输出契约（示例）</h3>
+  <pre class="food"><span class="c"># 膳食识别 MLLM 结构化输出（强约束 JSON schema）</span>
+{
+  <span class="k">"dishes"</span>: [
+    {
+      <span class="k">"name"</span>: <span class="s">"回锅肉"</span>,
+      <span class="k">"ingredients"</span>: [<span class="s">"五花肉"</span>, <span class="s">"青椒"</span>, <span class="s">"蒜苗"</span>],
+      <span class="k">"cooking_method"</span>: <span class="s">"炒（含油）"</span>,
+      <span class="k">"portion_g"</span>: {<span class="k">"estimate"</span>: 220, <span class="k">"low"</span>: 170, <span class="k">"high"</span>: 280},
+      <span class="k">"confidence"</span>: 0.86,
+      <span class="k">"needs_clarification"</span>: <span class="k">true</span>   <span class="c"># 触发对话式追问</span>
+    }
+  ],
+  <span class="k">"reference_objects"</span>: [<span class="s">"标准饭碗(约300ml)"</span>]
+}</pre>
+
+  <h3>3.2 成本与复杂度（相对估计）</h3>
+  <table>
+    <tr><th>阶段</th><th>主要成本</th><th>相对量级</th></tr>
+    <tr><td>MVP（迁移学习）</td><td>数据标注 + 单卡训练</td><td><span class="tag gray">低</span></td></tr>
+    <tr><td>RAG 增强</td><td>知识库建设 + MLLM 推理调用</td><td><span class="tag gray">中</span>（按调用量计费）</td></tr>
+    <tr><td>数据闭环</td><td>标注平台 + MLOps + 专家人力</td><td><span class="tag gray">中高</span>（持续投入）</td></tr>
+  </table>
+</div></section>
+
+<!-- ============ 路线图 ============ -->
+<section id="roadmap" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">4</span>分阶段实施路线图</h2>
+  <p class="lead">沿用调研报告的演进路径：<strong>迁移学习 MVP → MLLM+RAG 增强 → 专家标注反馈闭环</strong>。两条产品线并行推进，共享底座。</p>
+  <div class="tl">
+    <div class="row">
+      <div class="phase">阶段一<span class="sub">MVP 验证</span></div>
+      <div>
+        <div class="bar" style="width:70%"></div>
+        <ul>
+          <li><strong>杭白菊</strong>：田间多源采集协议定稿；采集病害+长势种子数据；DINOv2 微调做 T2 病害分类 + T1 长势分级，验证早期召回可行性。</li>
+          <li><strong>膳食</strong>：接入 MLLM 出结构化识别；接《中国食物成分表》做营养核算原型；验证图像-only 误差水平。</li>
+          <li>产出：两个可演示 Demo + 数据/指标基线。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="row">
+      <div class="phase">阶段二<span class="sub">RAG 增强</span></div>
+      <div>
+        <div class="bar" style="width:88%"></div>
+        <ul>
+          <li><strong>杭白菊</strong>：接入定点相机时序 + 气象做 T3 花蕾计数与产量预测；构建防治 RAG 出农艺建议；MLLM 复核疑难病症。</li>
+          <li><strong>膳食</strong>：上线对话式澄清与份量估计增强；接入膳食指南 RAG 出个性化建议；慢病模块。</li>
+          <li>产出：可解释报告 + 建议引擎 + 灰度评测体系。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="row">
+      <div class="phase">阶段三<span class="sub">数据闭环</span></div>
+      <div>
+        <div class="bar" style="width:100%"></div>
+        <ul>
+          <li>专家/用户反馈回流 + 主动学习 + 影子评测常态化。</li>
+          <li>端侧蒸馏部署（现场质检终端 / App 快速预识别）。</li>
+          <li>知识库热更新机制；多模态补强预留（NIR/深度传感器）。</li>
+          <li>产出：可持续优化的生产系统 + 数据护城河。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ 风险 ============ -->
+<section id="risk" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">5</span>风险、边界与合规</h2>
+  <div class="grid c2">
+    <div class="card">
+      <h4>技术与产品风险</h4>
+      <table>
+        <tr><th>风险</th><th>对策</th></tr>
+        <tr><td>病害早期弱信号易漏检</td><td>定点相机时序对比放大信号 + 多光谱增强 + 召回优先</td></tr>
+        <tr><td>成分/病原/土壤图像不可判</td><td>明确边界，输出"疑似+建议复检"，预留多光谱/镜检</td></tr>
+        <tr><td>产量受气象波动大</td><td>融合气象数据、给预测区间而非点值</td></tr>
+        <tr><td>份量估计误差大</td><td>标准餐具库 + 区间输出 + 对话式补充</td></tr>
+        <tr><td>MLLM 幻觉</td><td>RAG 强锚定权威库，数值只取检索结果</td></tr>
+        <tr><td>MLLM 推理成本/延迟</td><td>端侧预识别分流，仅疑难样本上云</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4>数据与合规</h4>
+      <ul>
+        <li><strong>健康数据敏感</strong>：膳食+慢病属个人健康信息，遵循《个人信息保护法》，最小化采集、加密存储、明确授权。</li>
+        <li><strong>医学免责</strong>：营养建议非诊疗意见，慢病场景引导就医，界面明示。</li>
+        <li><strong>药材鉴定定性</strong>：图像结论为辅助判定，法定检验以药检机构为准，报告注明。</li>
+        <li><strong>知识产权</strong>：药典/成分表/指南引用注明来源版本，商用核实授权。</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ 附录 ============ -->
+<section id="appendix" class="anchor"><div class="wrap">
+  <h2 class="sec"><span class="num">6</span>附录</h2>
+
+  <h3>6.1 杭白菊病害诊断 + 防治 RAG 调用示例</h3>
+  <pre><span class="c"># 病害识别 + 时序确认 + 检索防治手册出农艺建议</span>
+diag = disease_model.predict(image)       <span class="c"># → {"disease":"白锈病","stage":"早期","conf":0.88}</span>
+trend = timeseries.compare(plot_id, days=7) <span class="c"># 同地块跨期对比，放大早期弱信号</span>
+advice = rag.retrieve(
+    query=<span class="s">"杭白菊 白锈病 早期 防治 通风 药剂"</span>,
+    source=<span class="s">"杭白菊栽培技术规程·病虫害防治手册"</span>, top_k=3)
+report = mllm.explain(image, diag, trend, advice)
+<span class="c"># → "疑似白锈病早期，近7天病斑扩展；建议控湿通风、参考XX药剂[条目引用]，并送检确认"</span></pre>
+
+  <h3>6.2 膳食营养 RAG 调用示例</h3>
+  <pre class="food">dishes = mllm.recognize(image, schema=DISH_SCHEMA)   <span class="c"># 结构化识别</span>
+<span class="k">for</span> d <span class="k">in</span> dishes:
+    food = rag.match(d.ingredients, source=<span class="s">"中国食物成分表·第6版"</span>)
+    nutrition += calc(food, d.portion_g, d.cooking_method)  <span class="c"># 含烹饪修正</span>
+advice = rag.retrieve(source=<span class="s">"中国居民膳食指南2022"</span>, ctx=nutrition, profile=user)</pre>
+
+  <h3 id="refs">6.3 引用来源（承接调研报告）</h3>
+  <div class="card">
+    <p><strong>植物 / 中草药方向：</strong>[3] Wäldchen &amp; Mäder, 植物识别系统综述, 2018 · [5] Malik 等, 自然环境药用植物实时识别, 2022 · [10] Almazaydeh 等, Mask R-CNN 草药叶片识别, 2022 · [11] Akter &amp; Hosen, CNN 孟加拉草药叶片分类, 2020 · [12] 深度学习药用植物分类系统综述（Frontiers）。</p>
+    <div class="divider"></div>
+    <p><strong>食物 / 营养方向：</strong>[13][14] Nutri-Track（YOLOv8+决策树）膳食识别与热量估计 · [15] 食物图像识别与热量预测, IRJET 2024 · [16] <strong>DietAI24</strong>（Nature Comms Medicine, 2025，MLLM+RAG，MAE↓63%）· [17] 多模态 ChatGPT 膳食评估系统性分析（GPT-4V, arXiv:2312.08592）· [19] 对话式多模态 LLM 营养信息检索评估（GPT-4o, Virginia Tech）· [20] GPT-4 Vision 实时食物分析。</p>
+    <div class="divider"></div>
+    <p><strong>领域标准（本方案新增锚点）：</strong>杭白菊栽培技术规程与病虫害综合防治手册（种植科研/农技推广资料）· 《中国食物成分表》第 6 版（中国疾控中心营养与健康所）· 《中国居民膳食指南（2022）》（中国营养学会）。</p>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:10px">说明：编号沿用调研报告文献序号；植物类文献 [3][5][10][11][12] 同样支撑田间病害识别与长势分析。本实施方案在其结论基础上补充了杭白菊种植管理与中式膳食的领域标准锚点。图像模型对成分含量、病原种类、土壤养分的判定边界已在正文明确标注。</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div>AI Image Analyzer · 技术实施方案（深化篇）<br>承接《AI-Image-Analyzer-技术调研报告》</div>
+  <div style="text-align:right">编制日期 2026-07-03<br>架构：视觉基础模型 + MLLM + RAG + 专家闭环</div>
+</div></footer>
+
+</body>
+</html>
