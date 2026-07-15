@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loop Engineering：AI 编码的新范式</title>
+<style>
+:root{
+  --ink:#191919;--paper:#faf9f5;--card:#ffffff;--muted:#6b6b6b;
+  --accent:#d97757;--dark:#141413;--dark2:#1f1e1d;
+  --line:#e8e6e0;--code-bg:#f4f2ec;
+  --grad:linear-gradient(120deg,#d97757 0%,#b05730 50%,#7a4a9e 100%);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Helvetica Neue",Arial,sans-serif;background:var(--paper);color:var(--ink);line-height:1.85;font-size:16.5px}
+.wrap{max-width:920px;margin:0 auto;padding:0 28px}
+.hero{background:var(--dark);color:#f5f4ef;padding:96px 0 80px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 10%,rgba(217,119,87,.28),transparent 60%),radial-gradient(ellipse 50% 40% at 10% 90%,rgba(122,74,158,.22),transparent 60%)}
+.hero .wrap{position:relative}
+.kicker{display:inline-block;font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:#e8a188;border:1px solid rgba(232,161,136,.4);border-radius:999px;padding:5px 16px;margin-bottom:28px}
+.hero h1{font-size:clamp(34px,5.5vw,56px);font-weight:700;line-height:1.2;letter-spacing:-.01em;margin-bottom:22px}
+.hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{font-size:19px;color:#c9c6bd;max-width:720px;margin-bottom:36px}
+.hero .meta{display:flex;flex-wrap:wrap;gap:12px}
+.hero .meta span{font-size:13px;color:#a9a69d;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 14px}
+section{padding:72px 0 8px}
+h2{font-size:30px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+h2 .num{color:var(--accent);font-family:ui-monospace,Menlo,monospace;font-size:20px;margin-right:10px}
+.sec-sub{color:var(--muted);margin-bottom:32px;font-size:15.5px}
+h3{font-size:21px;font-weight:700;margin:36px 0 14px}
+p{margin-bottom:18px}
+strong{font-weight:650}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:#9c3f1f}
+pre{background:var(--dark2);color:#e8e6dd;border-radius:12px;padding:20px 24px;overflow-x:auto;font-size:14px;line-height:1.7;margin:20px 0 26px}
+pre code{background:none;border:none;color:inherit;padding:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 32px;margin:26px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h3{margin-top:0}
+.tag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--accent);border-radius:6px;padding:3px 10px;margin-bottom:12px}
+.tag.purple{background:#7a4a9e}.tag.teal{background:#2e7d6b}.tag.slate{background:#4a5568}
+figure{margin:22px 0 10px}
+figure img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line);display:block;background:#fff}
+figcaption{font-size:13.5px;color:var(--muted);margin-top:10px;text-align:center}
+table{width:100%;border-collapse:collapse;margin:24px 0 30px;font-size:15px;background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+th{background:var(--dark);color:#f0eee8;text-align:left;padding:13px 16px;font-weight:600;font-size:14px}
+td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#fbfaf6}
+.callout{border-left:4px solid var(--accent);background:linear-gradient(90deg,rgba(217,119,87,.08),transparent);border-radius:0 12px 12px 0;padding:20px 26px;margin:26px 0}
+.callout p:last-child{margin-bottom:0}
+ul,ol{margin:0 0 20px 24px}
+li{margin-bottom:8px}
+.divider{height:1px;background:var(--line);margin:56px 0 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+footer{background:var(--dark);color:#a9a69d;margin-top:80px;padding:56px 0;font-size:14.5px}
+footer a{color:#e8a188;text-decoration:none}
+footer a:hover{text-decoration:underline}
+footer .cols{display:flex;flex-wrap:wrap;gap:40px;justify-content:space-between}
+footer h4{color:#f0eee8;font-size:15px;margin-bottom:12px}
+footer li{list-style:none;margin-bottom:6px}
+footer ul{margin-left:0}
+.footnote{margin-top:36px;padding-top:24px;border-top:1px solid rgba(255,255,255,.12);font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">Loop Engineering · 2026</span>
+    <h1>Loop Engineering：<span class="grad">AI 编码的新范式</span></h1>
+    <p class="sub">Anthropic Claude Code 团队的工具原语 × Andrew Ng 的产品决策三 loop —— 两个视角，同一场从 "prompting" 到 "designing loops" 的范式迁移。</p>
+    <div class="meta">
+      <span>📄 来源一：Claude Code Team（Delba de Oliveira &amp; Michael Segner），2026-06-30</span>
+      <span>📄 来源二：Andrew Ng · The Batch #359，2026-06-26</span>
+      <span>🗓 报告生成：2026-07-15</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="summary">
+  <h2><span class="num">§0</span>Executive Summary</h2>
+  <p class="sec-sub">五段话读懂两篇文章的核心洞见</p>
+
+  <p><strong>Loop engineering 正在取代 prompt engineering，成为 AI 编码时代的核心能力。</strong>在 Boris Cherny（Claude Code 创造者）与 Peter Steinberger（OpenClaw 创造者）的讨论在社交媒体走红之后，"设计 loop 而不是写 prompt"已经成为 2026 年 AI 编码社区最热的议题。两篇几乎同时发布的权威文章——Anthropic Claude Code 团队的《Getting started with loops》和 Andrew Ng 的《Three Key Loops for Building Great Software》——从工具与产品两个层面，给出了这一概念目前最清晰的定义。</p>
+
+  <p><strong>Anthropic 给出的是"工具原语"视角。</strong>Claude Code 团队将 loop 定义为「agent 重复工作循环，直到满足停止条件（stop condition）」，并按触发方式、停止方式、所用原语和适用任务，划分出四类 loop：turn-based（逐轮手动）、goal-based（<code>/goal</code> 定义完成标准）、time-based（<code>/loop</code> 与 <code>/schedule</code> 定时触发）和 proactive（多原语组合的长时程主动循环）。这是一套自底向上的、可以直接上手的工程分类法。</p>
+
+  <p><strong>Andrew Ng 给出的是"时间尺度"视角。</strong>他把 0-to-1 产品开发拆成三个嵌套 loop：agentic coding loop（分钟级，AI 写代码并自测）、developer feedback loop（数十分钟到小时级，开发者审视产品并修正 spec）、external feedback loop（天到周级，真实用户反馈反哺产品愿景）。这是一套自顶向下的、指导"该造什么"的产品方法论。</p>
+
+  <p><strong>两个视角在关键判断上高度一致：</strong>可验证性决定 loop 的自主程度。Anthropic 强调把验证编码为 <code>SKILL.md</code>、用确定性指标（测试通过数、Lighthouse 分数）而非 "vibes" 定义完成；Ng 则指出正是"agent 能自测代码"这一步的成熟，让开发者从 QA 角色中解放出来，转向更高层的产品决策。同时两者都保留了人的位置：Ng 用 <strong>context advantage</strong>（而非模糊的"品味"）解释为什么 developer feedback loop 无法被自动化——只要人类知道 AI 不知道的用户与场景信息，human-in-the-loop 就是必需的。</p>
+
+  <p><strong>合起来看，这是一次分工结构的重排：</strong>Anthropic 的四种原语是 Ng 三个 loop 中最内层（agentic loop）的实现工具；而 Ng 的外两层 loop 定义了这些工具应该被谁、以什么节奏驱动。开发者的工作正在从"逐轮指挥 AI 写代码"升级为"设计一个多层 loop 系统，并把自己的 context advantage 注入其中"。</p>
+</section>
+
+<div class="divider"></div>
+
+<section id="anthropic">
+  <h2><span class="num">§1</span>Anthropic 视角：四种 Loop 原语</h2>
+  <p class="sec-sub">来源：claude.com/blog/getting-started-with-loops · Claude Code 团队</p>
+
+  <p>Claude Code 团队的定义非常收敛：<strong>loop = agent 重复工作循环，直到满足停止条件</strong>。分类依据是四个维度——如何触发、如何停止、用什么 Claude Code 原语、适合什么任务。团队同时给出一条重要的克制原则：<em>并非所有任务都需要复杂 loop，从最简单的方案开始，按需引入这些模式。</em></p>
+
+  <div class="card">
+    <span class="tag">1 · Turn-based</span>
+    <h3>Turn-based loop：每个 prompt 都是一次手动循环</h3>
+    <figure>
+      <img src="2026-07-15-loop-engineering-claude/images/01-turn-based-loops.png" alt="Turn-based loop 示意图：gather context → take action → verify work → respond">
+      <figcaption>Turn-based loop：由你逐轮驱动的 agentic loop</figcaption>
+    </figure>
+    <p>你发出的每个 prompt 都会启动一次由你指挥的手动循环：Claude 收集上下文 → 采取行动 → 检查自己的工作 → 必要时重复 → 返回结果。这就是最基础的 <strong>agentic loop</strong>。比如让 Claude 做一个点赞按钮：它读代码、改代码、跑测试，交回一个它<em>认为</em>能工作的结果，然后由你人工检查、写下一个 prompt。</p>
+    <p>升级点在<strong>验证环节</strong>：把你的人工检查步骤编码为 <code>SKILL.md</code>，让 Claude 端到端地自查——启动 dev server、在浏览器里实际点按控件、截图前后对比、检查 console 零报错、用 Chrome DevTools MCP 跑性能 trace 与 Core Web Vitals 审计。检查越是量化，agent 越容易自我验证。</p>
+  </div>
+
+  <div class="card">
+    <span class="tag purple">2 · Goal-based</span>
+    <h3>Goal-based loop（<code>/goal</code>）：用完成标准替代"感觉够好了"</h3>
+    <figure>
+      <img src="2026-07-15-loop-engineering-claude/images/02-goal-based-loop.png" alt="Goal-based loop 示意图：evaluator 检查 goal 是否达成，未达成则送回继续工作">
+      <figcaption>Goal-based loop：evaluator model 按你定义的条件决定何时停止</figcaption>
+    </figure>
+    <p>复杂任务往往一轮做不完，agent 需要持续迭代。<code>/goal</code> 让你显式定义"什么叫完成"：Claude 每次试图停下时，一个 evaluator model 会检查你的条件，不满足就把它送回去继续干，直到达成目标或用尽你设定的轮数上限。这样 Claude 不必自己判断"够好了没"而提前退出循环。</p>
+    <p><strong>确定性标准</strong>（通过的测试数量、达到某个分数阈值）在这里格外有效：</p>
+    <pre><code>/goal get the homepage Lighthouse score to 90 or above, stop after 5 tries.</code></pre>
+  </div>
+
+  <div class="card">
+    <span class="tag teal">3 · Time-based</span>
+    <h3>Time-based loop（<code>/loop</code> 与 <code>/schedule</code>）：让时间成为触发器</h3>
+    <p>有些 agentic 工作是周期性的——任务不变、只有输入在变（比如每天早上总结 Slack 消息）；有些工作依赖外部系统，最简单的接口方式就是按间隔轮询并对变化做出反应（比如 PR 可能收到 review 或 CI 失败）。</p>
+    <pre><code>/loop 5m check my PR, address review comments, and fix failing CI</code></pre>
+    <p><code>/loop</code> 在本机运行，关机即停；用 <code>/schedule</code> 创建 routine 可以把循环搬到云端持续执行。这条本地/云端的分界，是设计长期运行任务时的关键取舍。</p>
+  </div>
+
+  <div class="card">
+    <span class="tag slate">4 · Proactive</span>
+    <h3>Proactive loop：把原语组合成长时程的主动系统</h3>
+    <figure>
+      <img src="2026-07-15-loop-engineering-claude/images/03-proactive-loops.png" alt="Proactive loop 示意图：schedule + goal + workflow 组合成主动循环">
+      <figcaption>Proactive loop：/schedule + /goal + workflow 的组合</figcaption>
+    </figure>
+    <p>把上述原语与 auto mode、dynamic workflows（research preview）组合，就得到面向长时程工作的主动循环。以"处理进入的用户反馈"为例：用 <code>/schedule</code> 定时检查新消息，用 <code>/goal</code> 定义 triage 的完成标准，再用 workflow 在并行 worktree 里同时探索多个解法并由 judge 对抗性评审：</p>
+    <pre><code>/schedule every hour: check #project-feedback for bug reports.
+/goal: don't stop until every report found this run is triaged,
+      actioned, and responded to. When fixing a bug, use a workflow
+      to explore three solutions in parallel worktrees and have a
+      judge adversarially review them.</code></pre>
+  </div>
+
+  <h3>质量与成本：loop 的两条工程红线</h3>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="font-size:17px">维护代码质量</h3>
+      <ul>
+        <li>单个结果不达标时，不要止步于修复个案，把教训<strong>编码进系统</strong>，改善所有后续迭代</li>
+        <li>把验证<strong>内建到 loop 里</strong>（SKILL.md），不要依赖循环结束后的人工 review</li>
+        <li>状态外置（数据库、文件、PR），让工作可恢复、可审计</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="font-size:17px">控制 token 消耗</h3>
+      <ul>
+        <li>设置显式停止条件：轮数、时间、确定性 goal</li>
+        <li><code>/goal</code> 用可度量标准，not vibes</li>
+        <li>为任务匹配合适的 model 与 effort level——这是 loop 成本最大的杠杆</li>
+        <li>状态还在时用 resume session，别每次从零开始</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="ng">
+  <h2><span class="num">§2</span>Andrew Ng 视角：三个时间尺度的产品 Loop</h2>
+  <p class="sec-sub">来源：The Batch #359（deeplearning.ai）· Letters from Andrew Ng</p>
+
+  <figure>
+    <img src="2026-07-15-andrew-ng-three-loops/images/01-three-key-loops.jpg" alt="Three Key Product Development Loops：Agentic Coding Loop（分钟）、Developer Feedback Loop（小时）、External Feedback Loop（天）">
+    <figcaption>Andrew Ng 的三个关键产品开发 loop：分别以分钟、小时、天/周为节奏运转</figcaption>
+  </figure>
+
+  <p>Ng 的出发点不是工具，而是 <strong>0-to-1 产品开发的决策结构</strong>：这三个 loop 不仅指导他怎么造软件，还指导他<strong>决定造什么软件</strong>。三者的区分维度是时间尺度（timescale）与行动主体（who acts）。</p>
+
+  <div class="card">
+    <span class="tag">Loop 1 · 分钟级</span>
+    <h3>Agentic coding loop：AI 自己写、自己测、自己迭代</h3>
+    <p>给定产品 spec（可选地加上一组 evals 作为度量数据集），AI agent 可以写代码、测试、持续迭代，直到代码无 bug 且满足 spec。"closing the loop" 这个思路在去年年底爆发，成为让 coding agent 长时间无人干预地高效工作的 game changer。Ng 举了自己的例子：周末给女儿做打字练习 app，coding agent 可以独立工作约一小时，期间多次用浏览器检查自己构建的东西，完全不需要他介入。这个循环每隔几分钟就能构建并测试一个新版本——这也是当下发明最活跃的领域。</p>
+  </div>
+
+  <div class="card">
+    <span class="tag purple">Loop 2 · 数十分钟～小时级</span>
+    <h3>Developer feedback loop：人类的 context advantage 不可自动化</h3>
+    <p>开发者审视当前产品，引导 agent 改进它。去年很多开发者（包括 Ng 自己）实际在给 coding agent 当 QA——手动找 bug 再让 agent 修；如今 agent 自测能力大幅提升，这部分时间显著减少，开发者得以转向更高层的产品决策：提供哪些关键功能、UI 哪里需要改进、用户流程怎么设计。（打字 app 的例子里：视觉设计改了几版、女儿能解锁哪些猫咪装扮、家长登录引导学习的流程。）如果系统反复踩同一类坑，就该为 agent 建一组 evals。</p>
+    <p>最关键的论断：Ng 认为人类相对 AI 拥有显著的 <strong>context advantage</strong>——我们对用户和产品运行的场景知道得比 AI 多得多。很多人把这种人类贡献叫"taste（品味）"，但 Ng 更愿意称之为 context advantage，因为它指出了帮助 AI 变强的清晰路径，也解释了这一步为何不能自动化：<em>只要人类知道 AI 不知道的东西，就需要 human-in-the-loop 把这些知识注入系统。</em></p>
+  </div>
+
+  <div class="card">
+    <span class="tag teal">Loop 3 · 天～周级</span>
+    <h3>External feedback loop：真实世界反哺产品愿景</h3>
+    <p>手段很多——找几个朋友要反馈、发给 alpha 测试者、上生产做 A/B testing。这些手段很慢，很少快于小时级，常常需要几天甚至数周。但这些数据 inform 开发者的 vision，vision 驱动详细的产品 spec，spec 再驱动 coding agent——三个 loop 由此串成一条链。</p>
+    <p>随着 coding agent 加速开发，更多工程师开始承担部分产品经理的角色。对成长中的工程师来说，最难的是塑造产品愿景，并在 <strong>building</strong>（弥合 vision 与 spec 的差距）和 <strong>getting user feedback</strong>（用反馈演化 vision）之间取得平衡——两者都不可偏废。</p>
+  </div>
+
+  <table>
+    <thead><tr><th>Loop</th><th>时间尺度</th><th>行动主体</th><th>目的</th></tr></thead>
+    <tbody>
+      <tr><td>Agentic coding loop</td><td>分钟</td><td>AI</td><td>写 → 测 → 迭代，直到满足 spec</td></tr>
+      <tr><td>Developer feedback loop</td><td>数十分钟～小时</td><td>人类开发者</td><td>用 vision + spec 引导 agent</td></tr>
+      <tr><td>External feedback loop</td><td>天～周</td><td>真实用户</td><td>反馈 → vision → spec → agent</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="divider"></div>
+
+<section id="synthesis">
+  <h2><span class="num">§3</span>对照与综合：两套分类，一个体系</h2>
+  <p class="sec-sub">工具原语 × 时间尺度：为什么它们是互补而非竞争</p>
+
+  <table>
+    <thead><tr><th>维度</th><th>Anthropic（Claude Code 团队）</th><th>Andrew Ng</th></tr></thead>
+    <tbody>
+      <tr><td><strong>切入角度</strong></td><td>自底向上：工具原语与执行机制</td><td>自顶向下：产品决策与时间尺度</td></tr>
+      <tr><td><strong>Loop 的定义</strong></td><td>agent 重复工作循环，直到满足 stop condition</td><td>不同 timescale 上运转的迭代反馈回路</td></tr>
+      <tr><td><strong>分类依据</strong></td><td>触发方式 / 停止方式 / 所用原语 / 适用任务</td><td>时间尺度（分钟 / 小时 / 天）× 行动主体（AI / 开发者 / 用户）</td></tr>
+      <tr><td><strong>类别数</strong></td><td>4：turn-based / goal-based / time-based / proactive</td><td>3：agentic coding / developer feedback / external feedback</td></tr>
+      <tr><td><strong>核心机制</strong></td><td><code>SKILL.md</code> 验证、<code>/goal</code> evaluator、<code>/loop</code> / <code>/schedule</code>、workflows</td><td>spec + evals 驱动 agent；反馈数据驱动 vision</td></tr>
+      <tr><td><strong>人的角色</strong></td><td>设计 stop condition 与验证系统，从逐轮指挥中退出</td><td>凭 context advantage 做产品决策，human-in-the-loop 不可替代</td></tr>
+      <tr><td><strong>质量抓手</strong></td><td>确定性标准、not vibes；验证内建、状态外置</td><td>反复出现的问题 → 沉淀为 evals</td></tr>
+      <tr><td><strong>对应关系</strong></td><td colspan="2">Anthropic 的四种原语 ≈ Ng 的 Loop 1 内部实现；<code>/schedule</code> + proactive loop 让 agent 能持续对接 Ng 的 Loop 2/3 产生的反馈流</td></tr>
+    </tbody>
+  </table>
+
+  <h3>为什么这是 2026 年 AI 编码的范式转变</h3>
+  <p><strong>第一，工作单元从"一次回答"变成"一个会自我终止的过程"。</strong>Prompt engineering 优化的是单次输入-输出的质量；loop engineering 优化的是一个带触发器、验证器和停止条件的<em>系统</em>。开发者投入产出的杠杆点从"措辞"迁移到"stop condition 与验证的设计"。</p>
+  <p><strong>第二，验证从人工后置变为机器内建。</strong>两篇文章共同的转折点是 agent 学会了检查自己的工作——Anthropic 用 <code>SKILL.md</code>、evaluator model 和确定性指标把验证机制化；Ng 观察到的直接后果是开发者从 QA 中解放，转去做只有人类能做的事。可验证性成了 loop 自主程度的上限。</p>
+  <p><strong>第三，人的价值被重新命名和定位。</strong>Ng 用 context advantage 取代 "taste"，把人类贡献从玄学变成工程问题：人类之所以必需，是因为掌握 AI 缺失的信息；而这也给出了改进方向——把这些信息（用户画像、场景约束、历史踩坑）持续注入系统：写进 spec、沉淀为 evals、编码为 skills。</p>
+  <p><strong>第四，角色边界在双向融合。</strong>工程师承担部分产品经理职责（Ng），同时把过去人工执行的检查与流程沉淀为可复用的自动化资产（Anthropic）。2026 年的"高级开发者"，本质上是一个 <strong>multi-loop 系统的架构师与运营者</strong>。</p>
+
+  <div class="callout">
+    <p><strong>一句话综合：</strong>Anthropic 回答"loop 怎么造"（how），Andrew Ng 回答"loop 为谁转、以什么节奏转"（why &amp; when）。把四种原语装进三层时间尺度里，就得到一张完整的 loop engineering 地图。</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="action">
+  <h2><span class="num">§4</span>行动建议：从 turn-based prompt 到 multi-loop 系统</h2>
+  <p class="sec-sub">给开发者与团队的分阶段实操路线</p>
+
+  <h3>阶段 0：找到起点</h3>
+  <p>照 Claude Code 团队的建议自问：审视你已经在做的工作，挑一个<strong>你自己是瓶颈</strong>的任务——你能把验证步骤写出来吗？目标够清晰吗？这个工作是否按固定节奏到来？三个问题分别指向 SKILL.md、<code>/goal</code> 和 <code>/loop</code> / <code>/schedule</code>。</p>
+
+  <h3>阶段 1：强化 turn-based loop 的验证环节</h3>
+  <ul>
+    <li>把你每次人工检查的动作（跑测试、开浏览器点一遍、看 console、量性能）写成 <code>SKILL.md</code>，让 agent 端到端自查</li>
+    <li>优先使用<strong>量化检查</strong>：测试通过数、零 console error、Core Web Vitals 阈值</li>
+    <li>给 agent 配上"看见结果"的工具：浏览器、DevTools MCP、截图对比</li>
+  </ul>
+
+  <h3>阶段 2：用 <code>/goal</code> 延长迭代，用确定性标准定义完成</h3>
+  <ul>
+    <li>把"改到我满意为止"翻译成可判定条件：<code>Lighthouse ≥ 90</code>、<code>全部测试通过</code>、<code>覆盖率 ≥ 80%</code></li>
+    <li>永远附带熔断：轮数或时间上限（如 <code>stop after 5 tries</code>），控制 token 成本</li>
+    <li>为任务选对 model 与 effort level——这是成本最大的杠杆</li>
+  </ul>
+
+  <h3>阶段 3：把周期性工作交给 <code>/loop</code> 与 <code>/schedule</code></h3>
+  <ul>
+    <li>盘点"任务不变、输入在变"的例行事务：PR 巡检、CI 修复、日报汇总、反馈 triage</li>
+    <li>本机试跑用 <code>/loop</code>，验证稳定后用 <code>/schedule</code> 上云持久化</li>
+    <li>状态外置到 PR / 文件 / 数据库，保证可恢复、可审计</li>
+  </ul>
+
+  <h3>阶段 4：组合成 proactive 系统，并接入外层 loop</h3>
+  <ul>
+    <li>组合原语：<code>/schedule</code>（触发）+ <code>/goal</code>（完成标准）+ workflow（并行探索 + judge 对抗评审）</li>
+    <li>对齐 Ng 的三层结构：让 agentic loop 消化 developer feedback loop 与 external feedback loop 产出的信息流（用户反馈频道、A/B 数据、alpha 测试报告）</li>
+    <li>反复出现的同类问题 → 沉淀为 evals，成为内层 loop 的固定验证资产</li>
+  </ul>
+
+  <h3>阶段 5：经营你的 context advantage（团队层面）</h3>
+  <ul>
+    <li>把只有你/团队知道的用户与场景知识<strong>持续文档化</strong>：写进 spec、CLAUDE.md、SKILL.md、evals——每一条注入的知识都在缩小 AI 的信息差、放大 loop 的自主上限</li>
+    <li>刻意平衡 <strong>building</strong> 与 <strong>getting user feedback</strong>：不要因为内层 loop 太快太爽，就忘了让外层 loop 转起来</li>
+    <li>监控并迭代 <strong>loop 本身</strong>而不只是单次产出：观察它在哪里卡壳（stall）、在哪里越界（over-reach），像改代码一样改 loop</li>
+  </ul>
+
+  <div class="callout">
+    <p><strong>最小起步建议：</strong>本周就挑一个你重复做过三次以上的检查动作，写成第一个 <code>SKILL.md</code>；下周给一个明确可量化的任务套上第一个 <code>/goal</code>。multi-loop 系统不是设计出来的，是从一个能自我验证的小循环长出来的。</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <h4>数据来源</h4>
+        <ul>
+          <li>📄 <a href="https://claude.com/blog/getting-started-with-loops">Loop engineering: Getting started with loops</a> — Delba de Oliveira &amp; Michael Segner，Claude Code 团队（Anthropic），2026-06-30</li>
+          <li>📄 <a href="https://charonhub.deeplearning.ai/three-key-loops-for-building-great-software/">Three Key Loops for Building Great Software</a> — Andrew Ng，The Batch #359（deeplearning.ai），2026-06-26</li>
+        </ul>
+      </div>
+      <div>
+        <h4>关于本报告</h4>
+        <ul>
+          <li>原文下载日期：2026-07-15</li>
+          <li>报告生成日期：2026-07-15</li>
+          <li>整理：悟空 · Claude Code</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footnote">本报告为个人知识库归档用途整理，原文版权归 Anthropic 与 DeepLearning.AI 所有。图片来自原文配图，以相对路径引用本地存档副本。</div>
+  </div>
+</footer>
+
+</body>
+</html>
